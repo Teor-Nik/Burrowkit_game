@@ -1,1 +1,0 @@
-"""Burrowkit Game: Main module."""
