@@ -2,23 +2,23 @@
 
 import pygame
 
-from dungeon.model.level import Tiles
+from dungeon.model.level import Tile
 
-WINDOW_BKGND_COLOUR = (99, 90, 87)  # Dark brown background
-WINDOW_HEIGHT = 500  # slightly larger to allow for buttons
-WINDOW_WIDTH = 400
+WINDOW_BKGND_COLOUR = (82, 65, 64)  # Dark brown background
+WINDOW_HEIGHT = 600  # slightly larger to allow for buttons
+WINDOW_WIDTH = 600
 BLOCK_SMALL = 20
 
 # Type alias for RGB tuple
 RGB = tuple[int, int, int]
 
 
-colour_map: dict[Tiles, RGB] = {
-    Tiles.empty: (30, 117, 82),  # Dark green background
-    Tiles.wall: (143, 132, 121),  # mossy brown
-    Tiles.stairs: (196, 163, 214),  # purple down stairs
-    Tiles.goal: (230, 227, 197),  # light colour for exit
-    Tiles.entry: (135, 147, 237),  # blue for entry
+COLOUR_MAP: dict[Tile, RGB] = {
+    Tile.EMPTY: (30, 117, 82),  # Dark green background
+    Tile.WALL: (143, 132, 121),  # mossy brown
+    Tile.STAIR: (152, 227, 185),  # green down stairs
+    Tile.GOAL: (230, 227, 197),  # light colour for exit
+    Tile.ENTRANCE: (165, 152, 227),  # blue for entry
 }
 
 
@@ -40,22 +40,18 @@ class GameRenderer:
         # Fill the background color
         self.screen.fill(WINDOW_BKGND_COLOUR)
 
-    def get_surface(self) -> pygame.Surface:
-        """Return the game screen for model."""
-        return self.screen
-
     def reload_game_window(self) -> None:
         """Reload the game window."""
         pygame.display.flip()  # Update the display
 
-    def draw_level(self, level_map: list[list[Tiles]]) -> None:
+    def draw_level(self, level_map: list[list[Tile]]) -> None:
         """Draw each level onto the map on the screen."""
-        temp_x = 0  # store the initial x to reset after each row
-        x = 0
-        y = 0
+        temp_x = 100  # store the initial x to reset after each row
+        x = 100
+        y = 50
         for row in level_map:
             for tile in row:
-                colour = colour_map.get(tile, (0, 0, 0))
+                colour = COLOUR_MAP.get(tile, (0, 0, 0))
                 pygame.draw.rect(
                     self.screen, colour, (x, y, self.block_size, self.block_size)
                 )

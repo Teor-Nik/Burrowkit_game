@@ -13,6 +13,9 @@ class GameController:
         """Initialize the game controller."""
         # Create a GameRenderer instance
         self.game_renderer = renderer.GameRenderer()
+        # Create a GameLevel instance with the first level map
+        self.current_level = level.GameLevel(1)
+        self.game_renderer.draw_level(self.current_level.check_level())
         self.start_game()
 
     def start_game(self) -> None:
@@ -26,17 +29,12 @@ class GameController:
                 if event.type == pygame.QUIT:
                     running = False
 
-            # Create a GameLevel instance with the first level map
-            self.current_level = level.GameLevel().level_one_map
-            dungeon_map = self.current_level
-            # dungeon_map = level.GameLevel.check_level(self.current_level, "1") -- JAVA
-            # block = level.GameLevel.get_block_size(self.current_level) -- JAVA
-            self.game_renderer.draw_level(dungeon_map)
             # Render the game window
-            self.game_renderer.reload_game_window()
-
-            # Update the display
-            pygame.display.flip()
+            # self.game_renderer.reload_game_window()
+            # if self.current_level.is_walkable(2,2):
+            #     print("true")
+            # else:
+            #     print("NOT true")
 
         # Quit Pygame
         pygame.quit()
