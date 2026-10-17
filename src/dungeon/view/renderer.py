@@ -51,10 +51,11 @@ class GameRenderer:
         y = 50
         for row in level_map:
             for tile in row:
-                colour = COLOUR_MAP.get(tile, (0, 0, 0))
+                colour = COLOUR_MAP.get(tile, (143, 132, 121))
                 pygame.draw.rect(
                     self.screen, colour, (x, y, self.block_size, self.block_size)
                 )
                 x += self.block_size
             y += self.block_size
+
             x = temp_x  # reset x after each row

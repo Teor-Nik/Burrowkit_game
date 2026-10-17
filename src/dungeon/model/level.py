@@ -128,14 +128,15 @@ class GameLevel:
 
     def build_grid(self, level: list[list[int]]) -> list[list[Tile]]:
         """Build the level of the map into proper Tile."""
-        map_grid: list[list[Tile]] = []
-        for row in level:
-            row_design = []
-            for tile in row:
-                row_design.append(Tile(tile))
-            map_grid.append(row_design)
-            print(len(row_design))
+        map_grid: list[list[Tile]] = [[Tile(tile) for tile in row] for row in level]
         return map_grid
+        # map_grid: list[list[Tile]] = []
+        # for row in level:
+        #     row_design = []
+        #     for tile in row:
+        #         row_design.append(Tile(tile))
+        #     map_grid.append(row_design)
+        # return map_grid
 
     def tile_at(self, row: int, col: int) -> Tile:
         """Return the type of Tile at a specific position on the current level."""
@@ -149,3 +150,12 @@ class GameLevel:
             return False
         else:
             return True
+
+    def stairs_reached(self) -> None:
+        """Player has reached the stairs to the next level."""
+        level_iter = iter(LEVEL_LIST)  # Iterator over dictionary keys for each level
+        for level in level_iter:
+            if LEVEL_LIST[level] == self.level:
+                next_level_number = next(level_iter, 0)
+                self.level = LEVEL_LIST[next_level_number]
+                break
