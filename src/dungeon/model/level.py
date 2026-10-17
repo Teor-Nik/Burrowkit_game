@@ -103,7 +103,10 @@ LEVEL_4_MAP = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
-LEVEL_LIST: dict[int, list[list[Tile]]] = {}
+RAWLEVEL_DICT: dict[int, list[list[int]]] = {1: LEVEL_1_MAP, 2: LEVEL_2_MAP,
+                                            3: LEVEL_3_MAP, 4: LEVEL_4_MAP}
+
+LEVEL_DICT: dict[int, list[list[Tile]]] = {}
 
 
 class GameLevel:
@@ -111,32 +114,25 @@ class GameLevel:
 
     def __init__(self, level: int) -> None:
         """Initialise the Game Level."""
-        LEVEL_LIST[1] = self.build_grid(LEVEL_1_MAP)
-        LEVEL_LIST[2] = self.build_grid(LEVEL_2_MAP)
-        LEVEL_LIST[3] = self.build_grid(LEVEL_3_MAP)
-        LEVEL_LIST[4] = self.build_grid(LEVEL_4_MAP)
-        self.level = LEVEL_LIST[level]
-
-    def check_level(self) -> list[list[Tile]]:
-        """Check the current level the user is on."""
-        return self.level
+        self.level_number = level
+        self.rawlevel_list = RAWLEVEL_DICT
+        self.formatted_level_list = LEVEL_DICT
+        self.tiles = Tile
 
     def check_max_level(self) -> int:
         """Check the max level to see if this is the final level."""
-        tot_items = len(LEVEL_LIST)
+        tot_items = len(self.rawlevel_list)
         return tot_items
 
-    def build_grid(self, level: list[list[int]]) -> list[list[Tile]]:
+
+    def build_grid_initial(self, level: int) -> list[list[Tile]]:
         """Build the level of the map into proper Tile."""
-        map_grid: list[list[Tile]] = [[Tile(tile) for tile in row] for row in level]
+        matched_level = RAWLEVEL_DICT[level]
+        map_grid: list[list[Tile]] = [[Tile(tile)
+                                       for tile in row] for row in matched_level]
+        LEVEL_DICT[level] = map_grid
+        self.level = map_grid
         return map_grid
-        # map_grid: list[list[Tile]] = []
-        # for row in level:
-        #     row_design = []
-        #     for tile in row:
-        #         row_design.append(Tile(tile))
-        #     map_grid.append(row_design)
-        # return map_grid
 
     def tile_at(self, row: int, col: int) -> Tile:
         """Return the type of Tile at a specific position on the current level."""
@@ -153,9 +149,12 @@ class GameLevel:
 
     def stairs_reached(self) -> None:
         """Player has reached the stairs to the next level."""
-        level_iter = iter(LEVEL_LIST)  # Iterator over dictionary keys for each level
+        self.level_number
+        level_iter = iter(LEVEL_DICT)  # Iterator over dictionary keys for each level
         for level in level_iter:
-            if LEVEL_LIST[level] == self.level:
+            if level == self.level_number:
                 next_level_number = next(level_iter, 0)
-                self.level = LEVEL_LIST[next_level_number]
+                if next_level_number == 0:
+                    self.level = LEVEL_DICT[1]
+                self.level = LEVEL_DICT[next_level_number]
                 break
