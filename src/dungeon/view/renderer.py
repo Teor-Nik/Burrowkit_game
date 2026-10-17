@@ -52,10 +52,14 @@ class GameRenderer:
         for row in level_map:
             for tile in row:
                 colour = COLOUR_MAP.get(tile, (143, 132, 121))
-                pygame.draw.rect(
-                    self.screen, colour, (x, y, self.block_size, self.block_size)
-                )
+                self.render_cell(colour, x, y, self.block_size)
                 x += self.block_size
             y += self.block_size
 
             x = temp_x  # reset x after each row
+
+    def render_cell(
+        self, colour: tuple[int, int, int], x: int, y: int, size: int
+    ) -> None:
+        """Render a single cell based on the cell type passed in."""
+        pygame.draw.rect(self.screen, colour, (x, y, size, size))

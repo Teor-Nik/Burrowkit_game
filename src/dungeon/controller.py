@@ -15,7 +15,9 @@ class GameController:
         self.game_renderer = renderer.GameRenderer()
         # Create a GameLevel instance with the first level map
         self.game_model = level.GameLevel(1)
-        self.game_model.build_grid_initial(self.game_model.level_number)
+        self.current_level = self.game_model.build_grid_initial(
+            self.game_model.level_number
+        )
         self.start_game()
 
     def start_game(self) -> None:
@@ -23,19 +25,12 @@ class GameController:
         # Main game loop
         running = True
         clock = pygame.time.Clock()
-        level_loaded = False
         while running:
             clock.tick(60)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            if not level_loaded:
                 self.game_renderer.draw_level(self.game_model.level)
-                level_loaded = True
-
-            # if self.current_level.stairs_reached():
-            #     level_loaded = False
-
             # Render the game window
             self.game_renderer.reload_game_window()
             # if self.current_level.is_walkable(2,2):

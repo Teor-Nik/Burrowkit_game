@@ -103,8 +103,12 @@ LEVEL_4_MAP = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
-RAWLEVEL_DICT: dict[int, list[list[int]]] = {1: LEVEL_1_MAP, 2: LEVEL_2_MAP,
-                                            3: LEVEL_3_MAP, 4: LEVEL_4_MAP}
+RAWLEVEL_DICT: dict[int, list[list[int]]] = {
+    1: LEVEL_1_MAP,
+    2: LEVEL_2_MAP,
+    3: LEVEL_3_MAP,
+    4: LEVEL_4_MAP,
+}
 
 LEVEL_DICT: dict[int, list[list[Tile]]] = {}
 
@@ -124,12 +128,12 @@ class GameLevel:
         tot_items = len(self.rawlevel_list)
         return tot_items
 
-
     def build_grid_initial(self, level: int) -> list[list[Tile]]:
         """Build the level of the map into proper Tile."""
         matched_level = RAWLEVEL_DICT[level]
-        map_grid: list[list[Tile]] = [[Tile(tile)
-                                       for tile in row] for row in matched_level]
+        map_grid: list[list[Tile]] = [
+            [Tile(tile) for tile in row] for row in matched_level
+        ]
         LEVEL_DICT[level] = map_grid
         self.level = map_grid
         return map_grid
