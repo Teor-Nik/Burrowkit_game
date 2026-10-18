@@ -2,16 +2,19 @@
 
 import pygame
 
+from dungeon.model.entities import Entity
 from dungeon.model.level import Tile
 
 WINDOW_BKGND_COLOUR = (82, 65, 64)  # Dark brown background
 WINDOW_HEIGHT = 600  # slightly larger to allow for buttons
 WINDOW_WIDTH = 600
 BLOCK_SMALL = 20
+ENTITY_SMALL = 15
 
 # Type alias for RGB tuple
 RGB = tuple[int, int, int]
 
+DRAW_COORDINATES = tuple([int, int])
 
 COLOUR_MAP: dict[Tile, RGB] = {
     Tile.EMPTY: (30, 117, 82),  # Dark green background
@@ -21,6 +24,12 @@ COLOUR_MAP: dict[Tile, RGB] = {
     Tile.ENTRANCE: (165, 152, 227),  # blue for entry
 }
 
+COLOUR_ENTITIES: dict[Entity, RGB] = {
+    Entity.PLAYER: (28, 28, 235),  # Bright Blue Player
+    Entity.MONSTER: (179, 20, 20),  # Red monster
+    Entity.KIT: (179, 151, 111),  # Kit brown (fawn)
+
+}
 
 class GameRenderer:
     """Class responsible for rendering the game window."""
@@ -32,6 +41,7 @@ class GameRenderer:
         self.width = WINDOW_WIDTH
         self.height = WINDOW_HEIGHT
         self.block_size = BLOCK_SMALL
+        self.entity_size = ENTITY_SMALL
 
         # Set up the game window
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -46,20 +56,33 @@ class GameRenderer:
 
     def draw_level(self, level_map: list[list[Tile]]) -> None:
         """Draw each level onto the map on the screen."""
-        temp_x = 100  # store the initial x to reset after each row
-        x = 100
-        y = 50
-        for row in level_map:
-            for tile in row:
-                colour = COLOUR_MAP.get(tile, (143, 132, 121))
-                self.render_cell(colour, x, y, self.block_size)
-                x += self.block_size
-            y += self.block_size
+        temp_col = 0  # store the initial x to reset after each row
+        row = 0
+        col = 0
+        for row_tiles in level_map:
+            for col_tile in row_tiles:
+                colour = COLOUR_MAP.get(col_tile, (143, 132, 121))
+                self.render_cell(colour, row, col, self.block_size)
+                col += self.block_size
+            row += self.block_size
 
-            x = temp_x  # reset x after each row
+            col = temp_col  # reset x after each row
+
+    def draw_entity(self, type:Entity, coords) -> None:
+        """Draw the player on the level."""
+        print ("render start coords", coords)
+        row_num = coords[0] * self.block_size
+        col_num = coords[1] * self.block_size
+        row = round(row_num / 10) * 10
+        col = round(col_num / 10) * 10
+        print ("render coords:", row, col)
+        colour = COLOUR_ENTITIES.get(type, (0, 0, 121))
+        self.render_cell(colour, row, col, self.entity_size)
 
     def render_cell(
-        self, colour: tuple[int, int, int], x: int, y: int, size: int
+        self, colour: tuple[int, int, int], row: int, col: int, size: int
     ) -> None:
         """Render a single cell based on the cell type passed in."""
-        pygame.draw.rect(self.screen, colour, (x, y, size, size))
+        pygame.draw.rect(self.screen, colour, (col, row, size, size))
+
+

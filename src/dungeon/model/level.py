@@ -123,42 +123,105 @@ class GameLevel:
         self.formatted_level_list = LEVEL_DICT
         self.tiles = Tile
 
-    def check_max_level(self) -> int:
-        """Check the max level to see if this is the final level."""
-        tot_items = len(self.rawlevel_list)
-        return tot_items
+    def determain_start_position(self, level: int, movement: bool) -> None:
+        """Get the Row and Col of the requested level."""
+        tile: Tile
+        if movement:
+            tile = Tile.STAIR
+        else:
+            tile = Tile.ENTRANCE
+        matched_level = RAWLEVEL_DICT[level]
+        # Define a coordinate type
+        self.coordinates:tuple[int, int]
+        for row_position, row in enumerate(matched_level):
+            for col_position, col in enumerate(row):
+                if col == tile.value:
+                        self.coordinates = (row_position, col_position)
+                    #print ("determian start pos: ", self.coordinates)
 
     def build_grid_initial(self, level: int) -> list[list[Tile]]:
         """Build the level of the map into proper Tile."""
         matched_level = RAWLEVEL_DICT[level]
         map_grid: list[list[Tile]] = [
-            [Tile(tile) for tile in row] for row in matched_level
+            [Tile(col) for col in row] for row in matched_level
         ]
         LEVEL_DICT[level] = map_grid
         self.level = map_grid
+        self.level_number = level
         return map_grid
-
-    def tile_at(self, row: int, col: int) -> Tile:
-        """Return the type of Tile at a specific position on the current level."""
-        tile_at_position = self.level[row][col]
-        return tile_at_position
 
     def is_walkable(self, row: int, col: int) -> bool:
         """Return the type of Tile at a specific position on the current level."""
-        tile = self.tile_at(row, col)
+        tile = self.level[row][col]
         if tile == Tile.WALL:
             return False
         else:
             return True
 
-    def stairs_reached(self) -> None:
+    def is_stairs(self, coords: tuple[int,int]) -> bool:
+        """Return the type of Tile at a specific position on the current level."""
+        row = coords[0]
+        col = coords[1]
+        if not isinstance(row, int):
+            raise TypeError("First element is not an integer.")
+        if not isinstance(col, int):
+            raise TypeError("First element is not an integer.")
+        tile = self.level[row][col]
+        if tile == Tile.STAIR:
+            return True
+        else:
+            return False
+
+    def is_returned_to_entrace(self, coords: tuple[int,int]) -> bool:
+        """Return the type of Tile at a specific position on the current level."""
+        row = coords[0]
+        col = coords[1]
+        if not isinstance(row, int):
+            raise TypeError("First element is not an integer.")
+        if not isinstance(col, int):
+            raise TypeError("First element is not an integer.")
+        tile = self.level[row][col]
+        if tile == Tile.ENTRANCE:
+            return True
+        else:
+            return False
+
+    def is_goal(self, coords: tuple[int,int]) -> bool:
+        """Return the type of Tile at a specific position on the current level."""
+        row = coords[0]
+        col = coords[1]
+        if not isinstance(row, int):
+            raise TypeError("First element is not an integer.")
+        if not isinstance(col, int):
+            raise TypeError("First element is not an integer.")
+        tile = self.level[row][col]
+        if tile == Tile.GOAL:
+            return True
+        else:
+            return False
+
+    def goal_reached(self) -> bool:
+        """Player has reached the final goal."""
+        if len(self.rawlevel_list) == self.level_number:
+            return True
+        else:
+            return False
+
+    def stairs_reached(self) -> bool:
         """Player has reached the stairs to the next level."""
-        self.level_number
-        level_iter = iter(LEVEL_DICT)  # Iterator over dictionary keys for each level
-        for level in level_iter:
-            if level == self.level_number:
-                next_level_number = next(level_iter, 0)
-                if next_level_number == 0:
-                    self.level = LEVEL_DICT[1]
-                self.level = LEVEL_DICT[next_level_number]
-                break
+        if len(self.rawlevel_list) == self.level_number:
+            return False
+        elif self.level_number + 1 < len(self.rawlevel_list) and self.level_number > 0:
+            return True
+        else:
+            return False
+
+    def returned_to_entrace(self) -> bool:
+        """Player has reached the stairs to the next level."""
+        if len(self.rawlevel_list) == self.level_number:
+            return False
+        elif (self.level_number - 1 < len(self.rawlevel_list)
+              and self.level_number - 1 > 0):
+            return True
+        else:
+            return False

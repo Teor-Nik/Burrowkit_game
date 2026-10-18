@@ -9,11 +9,11 @@ from dungeon.model.level import GameLevel, Tile
 def test_row_length_all_maps(level: int) -> None:
     """Test that each row has the same length for all maps."""
     game = GameLevel(level)
-    lengths = []
-    for w in game.rawlevel_list[level]:
-        length = len(w)
-        lengths.append(length)
-    unique_values = list(set(lengths))
+    all_lengths = []
+    for row in game.rawlevel_list[level]:
+        row_length = len(row)
+        all_lengths.append(row_length)
+    unique_values = list(set(all_lengths))
     assert unique_values == [20]
 
 
@@ -21,10 +21,10 @@ def test_row_length_all_maps(level: int) -> None:
 def test_full_size_all_maps(level: int) -> None:
     """Test that each map has the same overall size."""
     game = GameLevel(level)
-    lengths = 0
-    for w in game.rawlevel_list[level]:
-        lengths += len(w)
-    assert lengths == 400
+    all_lengths = 0
+    for row in game.rawlevel_list[level]:
+        all_lengths += len(row)
+    assert all_lengths == 400
 
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
@@ -33,8 +33,8 @@ def test_all_cells_all_maps(level: int):
     game = GameLevel(level)
     match_tile: int = -1
     for row in game.rawlevel_list[level]:
-        for tile in row:
-            match_tile = game.tiles(tile).value
+        for col in row:
+            match_tile = game.tiles(col).value
     assert match_tile in {0, 1, 2, 3, 4}
 
 
@@ -43,13 +43,13 @@ def test_one_goal_all_maps(level: int) -> None:
     """Test that the final level has a goal, but all others do not."""
     game = GameLevel(level)
     expected_result = []
-    if game.check_max_level() == level:
+    if len(game.rawlevel_list) == level:
         expected_result = [Tile.GOAL]
     goals = []
     for row in game.build_grid_initial(level):
-        for tile in row:
-            if tile == Tile.GOAL:
-                goals.append(tile)
+        for col in row:
+            if col == Tile.GOAL:
+                goals.append(col)
     assert goals == expected_result
 
 
@@ -60,8 +60,8 @@ def test_one_entrance_per_map(level: int) -> None:
     level_map = game.rawlevel_list[level]
     entrances = []
     for row in level_map:
-        for tile in row:
-            if tile == Tile.ENTRANCE.value:
+        for col in row:
+            if col == Tile.ENTRANCE.value:
                 entrances.append(Tile.ENTRANCE)
     assert entrances == [Tile.ENTRANCE]
 
@@ -72,11 +72,28 @@ def test_one_stairs_per_map(level: int) -> None:
     game = GameLevel(level)
     level_map = game.rawlevel_list[level]
     expected_result = [Tile.STAIR]
-    if game.check_max_level() == level:
+    if len(game.rawlevel_list) == level:
         expected_result = []
     stairs = []
     for row in level_map:
-        for tile in row:
-            if tile == Tile.STAIR.value:
+        for col in row:
+            if col == Tile.STAIR.value:
                 stairs.append(Tile.STAIR)
     assert stairs == expected_result
+
+@pytest.mark.parametrize("level", [1, 2, 3, 4, -1])
+def test_reaching_stairs(level: int) -> None:
+    """Test all valid levels return True. Final or Invalid levels return False."""
+    game = GameLevel(level)
+    expected_result = [False]
+    if len(game.rawlevel_list) == level:
+        expected_result = [False]
+    elif game.level_number < len(game.rawlevel_list) and game.level_number > 0:
+        expected_result = level + 1
+    new_level = []
+    result = game.stairs_reached()
+    if result:
+        new_level = game.level_number
+    else:
+        new_level = [result]
+    assert new_level == expected_result
