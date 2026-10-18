@@ -211,16 +211,14 @@ class GameLevel:
         """Player has reached the stairs to the next level."""
         if len(self.rawlevel_list) == self.level_number:
             return False
-        elif self.level_number + 1 < len(self.rawlevel_list) and self.level_number > 0:
+        elif self.level_number + 1 <= len(self.rawlevel_list) and self.level_number > 0:
             return True
         else:
             return False
 
     def returned_to_entrace(self) -> bool:
         """Player has reached the stairs to the next level."""
-        if len(self.rawlevel_list) == self.level_number:
-            return False
-        elif (self.level_number - 1 < len(self.rawlevel_list)
+        if (self.level_number - 1 <= len(self.rawlevel_list)
               and self.level_number - 1 > 0):
             return True
         else:
