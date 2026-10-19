@@ -158,7 +158,7 @@ class GameLevel:
         valid_move = False
         new_tile = self.level[new_row][new_col]
         curr_tile = self.level[curr_row][curr_col]
-        if self.is_walkable(new_row, new_col):
+        if not self.tile_at(new_row, new_col, Tile.WALL):
             valid_move = True
         if curr_tile == Tile.STAIR and new_tile == Tile.WALL:
             valid_move = False
@@ -166,55 +166,55 @@ class GameLevel:
             valid_move = False
         return valid_move
 
-    def is_walkable(self, new_row: int, new_col: int) -> bool:
+    def tile_at(self, row: int, col: int, type_check: Tile) -> bool:
         """Return the type of Tile at a specific position on the current level."""
-        new_tile = self.level[new_row][new_col]
-        if new_tile == Tile.WALL:
-            return False
-        else:
-            return True
-
-    def is_stairs(self, coords: tuple[int, int]) -> bool:
-        """Return the type of Tile at a specific position on the current level."""
-        row = coords[0]
-        col = coords[1]
-        if not isinstance(row, int):
-            raise TypeError("First element is not an integer.")
-        if not isinstance(col, int):
-            raise TypeError("First element is not an integer.")
-        tile = self.level[row][col]
-        if tile == Tile.STAIR:
+        new_tile = self.level[row][col]
+        if new_tile == type_check:
             return True
         else:
             return False
 
-    def is_returned_to_entrace(self, coords: tuple[int, int]) -> bool:
-        """Return the type of Tile at a specific position on the current level."""
-        row = coords[0]
-        col = coords[1]
-        if not isinstance(row, int):
-            raise TypeError("First element is not an integer.")
-        if not isinstance(col, int):
-            raise TypeError("First element is not an integer.")
-        tile = self.level[row][col]
-        if tile == Tile.ENTRANCE:
-            return True
-        else:
-            return False
+    # def is_stairs(self, coords: tuple[int, int]) -> bool:
+    #     """Return the type of Tile at a specific position on the current level."""
+    #     row = coords[0]
+    #     col = coords[1]
+    #     if not isinstance(row, int):
+    #         raise TypeError("First element is not an integer.")
+    #     if not isinstance(col, int):
+    #         raise TypeError("First element is not an integer.")
+    #     tile = self.level[row][col]
+    #     if tile == Tile.STAIR:
+    #         return True
+    #     else:
+    #         return False
 
-    def is_goal(self, coords: tuple[int, int]) -> bool:
-        """Return the type of Tile at a specific position on the current level."""
-        row = coords[0]
-        col = coords[1]
-        if not isinstance(row, int):
-            raise TypeError("First element is not an integer.")
-        if not isinstance(col, int):
-            raise TypeError("First element is not an integer.")
-        tile = self.level[row][col]
-        if tile == Tile.GOAL:
-            return True
-        else:
-            return False
+    # def is_returned_to_entrace(self, coords: tuple[int, int]) -> bool:
+    #     """Return the type of Tile at a specific position on the current level."""
+    #     row = coords[0]
+    #     col = coords[1]
+    #     if not isinstance(row, int):
+    #         raise TypeError("First element is not an integer.")
+    #     if not isinstance(col, int):
+    #         raise TypeError("First element is not an integer.")
+    #     tile = self.level[row][col]
+    #     if tile == Tile.ENTRANCE:
+    #         return True
+    #     else:
+    #         return False
+
+    # def is_goal(self, coords: tuple[int, int]) -> bool:
+    #     """Return the type of Tile at a specific position on the current level."""
+    #     row = coords[0]
+    #     col = coords[1]
+    #     if not isinstance(row, int):
+    #         raise TypeError("First element is not an integer.")
+    #     if not isinstance(col, int):
+    #         raise TypeError("First element is not an integer.")
+    #     tile = self.level[row][col]
+    #     if tile == Tile.GOAL:
+    #         return True
+    #     else:
+    #         return False
 
     def goal_reached(self, level: int) -> bool:
         """Determine valid movement final level reached (allows for bonus level)."""

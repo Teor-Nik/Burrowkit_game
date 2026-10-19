@@ -50,17 +50,29 @@ class GameController:
                 elif event.type == pygame.KEYDOWN:
                     key_name = pygame.key.name(event.key)
                     if self.player.player_move_coords(self.player.position, key_name):
-                        if self.game_model.is_returned_to_entrace(self.player.position):
+                        if self.game_model.tile_at(
+                            self.player.position[0],
+                            self.player.position[1],
+                            self.game_model.tiles.ENTRANCE
+                        ):
                             if self.game_model.returned_to_entrace(self.current_level):
                                 # player returning to previous map
                                 self.return_to_prev_map = True
                                 self.current_level -= 1
                                 self.redraw_map = True
-                        if self.game_model.is_stairs(self.player.position):
+                        if self.game_model.tile_at(
+                            self.player.position[0],
+                            self.player.position[1],
+                            self.game_model.tiles.STAIR
+                        ):
                             if self.game_model.stairs_reached(self.current_level):
                                 self.current_level += 1
                                 self.redraw_map = True
-                        if self.game_model.is_goal(self.player.position):
+                        if self.game_model.tile_at(
+                            self.player.position[0],
+                            self.player.position[1],
+                            self.game_model.tiles.GOAL
+                        ):
                             if self.game_model.goal_reached(self.current_level):
                                 print("END GAME!!!!!!!!!!!!!!!!!!!!!!!!!!")
                                 running = False
