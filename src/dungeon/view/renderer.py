@@ -28,8 +28,8 @@ COLOUR_ENTITIES: dict[Entity, RGB] = {
     Entity.PLAYER: (28, 28, 235),  # Bright Blue Player
     Entity.MONSTER: (179, 20, 20),  # Red monster
     Entity.KIT: (179, 151, 111),  # Kit brown (fawn)
-
 }
+
 
 class GameRenderer:
     """Class responsible for rendering the game window."""
@@ -68,14 +68,12 @@ class GameRenderer:
 
             col = temp_col  # reset x after each row
 
-    def draw_entity(self, type:Entity, coords) -> None:
+    def draw_entity(self, type: Entity, coords: tuple[int, int]) -> None:
         """Draw the player on the level."""
-        print ("render start coords", coords)
         row_num = coords[0] * self.block_size
         col_num = coords[1] * self.block_size
         row = round(row_num / 10) * 10
         col = round(col_num / 10) * 10
-        print ("render coords:", row, col)
         colour = COLOUR_ENTITIES.get(type, (0, 0, 121))
         self.render_cell(colour, row, col, self.entity_size)
 
@@ -84,5 +82,3 @@ class GameRenderer:
     ) -> None:
         """Render a single cell based on the cell type passed in."""
         pygame.draw.rect(self.screen, colour, (col, row, size, size))
-
-

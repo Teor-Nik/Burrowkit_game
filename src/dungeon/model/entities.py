@@ -2,6 +2,8 @@
 
 from enum import Enum
 
+from dungeon.model.level import GameLevel
+
 
 class Entity(Enum):
     """List of Entity types."""
@@ -10,17 +12,17 @@ class Entity(Enum):
     MONSTER = 1
     KIT = 2
 
+
 class Player:
     """Class representing a player in the dungeon game."""
 
-    def __init__(self, game_level, coords: tuple[int,int]) -> None:
+    def __init__(self, game_level: GameLevel, coords: tuple[int, int]) -> None:
         """Initialise the Player."""
         self.game = game_level
-        #print("player coords:", self.position)
         self.type = Entity.PLAYER
         self.position = coords
 
-    def player_move_coords(self, coords: tuple[int,int], keyname: str) -> None:
+    def player_move_coords(self, coords: tuple[int, int], keyname: str) -> bool:
         """Move player to grid coordinates."""
         row_position = coords[0]
         col_position = coords[1]
@@ -30,13 +32,15 @@ class Player:
             raise TypeError("First element is not an integer.")
         new_row = row_position
         new_col = col_position
-        if keyname == 'up':
+        if keyname == "up":
             new_row -= 1
-        elif keyname == 'down':
+        elif keyname == "down":
             new_row += 1
-        elif keyname == 'left':
+        elif keyname == "left":
             new_col -= 1
-        elif keyname == 'right':
+        elif keyname == "right":
             new_col += 1
-        if self.game.is_walkable(new_row, new_col):
+        if self.game.valid_move(new_row, new_col, row_position, col_position):
             self.position = (new_row, new_col)
+            return True
+        return False
