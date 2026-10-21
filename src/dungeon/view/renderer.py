@@ -1,6 +1,5 @@
 """Module for rendering the game window using Pygame."""
 
-import sys
 from enum import Enum
 
 import pygame
@@ -21,7 +20,7 @@ class Panel(Enum):
 WINDOW_BKGND_COLOUR = (144, 209, 197)  # Green map background 90D1C5
 PROGRESS_WINDOW_BKGND_COLOUR = (165, 144, 209)
 W_HEIGHT = 800  # larger to allow for buttons
-W_WIDTH = 800 # larger to allow for buttons
+W_WIDTH = 800  # larger to allow for buttons
 # Calculate half dimensions
 HALF_WIDTH = W_WIDTH // 2
 HALF_HEIGHT = W_HEIGHT // 2
@@ -49,6 +48,7 @@ COLOUR_ENTITIES: dict[EntityType, RGB] = {
     EntityType.KIT: (209, 165, 144),  # Kit brown (fawn)
 }
 
+
 class GameRenderer:
     """Class responsible for rendering the game window."""
 
@@ -67,34 +67,39 @@ class GameRenderer:
         self.draw_quadrants()
 
     # Function to draw the 4 quadrants
-    def draw_quadrants(self):
-        """"Divide the window up into four quadrants for the game."""
+    def draw_quadrants(self) -> None:
+        """Divide the window up into four quadrants for the game."""
         self.screen.fill(WINDOW_BKGND_COLOUR)  # Clear screen
 
         # Top-left quadrant for MAP
-        pygame.draw.rect(
-            self.screen, (30, 117, 82), (0, 0, HALF_WIDTH, HALF_HEIGHT)
-        )
+        pygame.draw.rect(self.screen, (30, 117, 82), (0, 0, HALF_WIDTH, HALF_HEIGHT))
         self.map_section = self.screen.subsurface((0, 0, HALF_WIDTH, HALF_HEIGHT))
 
         # Top-right quadrant for Player section
         pygame.draw.rect(
             self.screen, (182, 205, 240), (HALF_WIDTH, 0, HALF_WIDTH, HALF_HEIGHT)
         )
-        self.player_section = self.screen.subsurface((HALF_WIDTH, 0, HALF_WIDTH, HALF_HEIGHT))
+        self.player_section = self.screen.subsurface(
+            (HALF_WIDTH, 0, HALF_WIDTH, HALF_HEIGHT)
+        )
 
         # Bottom-left quadrant for kit section
         pygame.draw.rect(
             self.screen, (224, 216, 200), (0, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT)
         )
-        self.kit_section = self.screen.subsurface((0, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT))
+        self.kit_section = self.screen.subsurface(
+            (0, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT)
+        )
 
         # Bottom-right quadrant for Overall Game Stats
         pygame.draw.rect(
-            self.screen, (200, 224, 216),
+            self.screen,
+            (200, 224, 216),
+            (HALF_WIDTH, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT),
+        )
+        self.overall_section = self.screen.subsurface(
             (HALF_WIDTH, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT)
         )
-        self.overall_section = self.screen.subsurface((HALF_WIDTH, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT))
 
         # Optional: draw dividing lines
         pygame.draw.line(
@@ -108,13 +113,13 @@ class GameRenderer:
     def determine_quadrant_corner(self, type: pygame.Surface) -> tuple[int, int]:
         """Determine where the top left corner of the panel is."""
         if type == self.map_section:
-              return (0, 0)  # Top-left quadrant
+            return (0, 0)  # Top-left quadrant
         if type == self.player_section:
-            return (HALF_WIDTH, 0) # Top-right quadrant
+            return (HALF_WIDTH, 0)  # Top-right quadrant
         if type == self.kit_section:
-            return (0, HALF_HEIGHT) # Bottom-left quadrant
+            return (0, HALF_HEIGHT)  # Bottom-left quadrant
         if type == self.overall_section:
-            return (HALF_WIDTH, HALF_HEIGHT)   # Bottom-right quadrant
+            return (HALF_WIDTH, HALF_HEIGHT)  # Bottom-right quadrant
         return (0, 0)
 
     def reload_game_window(self) -> None:
@@ -147,12 +152,16 @@ class GameRenderer:
             coords = self.determine_quadrant_corner(self.overall_section)
         font = pygame.font.SysFont(None, 45)
         text_surface = font.render(label, True, (94, 83, 86))
-        self.screen.blit(text_surface, (coords[0] + 10, coords[1] + 10, PANEL_WIDTH, PANEL_HEIGHT))
+        self.screen.blit(
+            text_surface, (coords[0] + 10, coords[1] + 10, PANEL_WIDTH, PANEL_HEIGHT)
+        )
         font = pygame.font.SysFont(None, 20)
         text_surface = font.render(details, True, (94, 83, 86))
-        self.screen.blit(text_surface, (coords[0] + 10, coords[1] + 40, PANEL_WIDTH, PANEL_HEIGHT))
+        self.screen.blit(
+            text_surface, (coords[0] + 10, coords[1] + 40, PANEL_WIDTH, PANEL_HEIGHT)
+        )
 
-    def draw_EntityType(self, type: EntityType, coords: tuple[int, int]) -> None:
+    def draw_entity_type(self, type: EntityType, coords: tuple[int, int]) -> None:
         """Draw the player on the level."""
         row_num = coords[0] * self.block_size
         col_num = coords[1] * self.block_size

@@ -14,12 +14,13 @@ class EntityType(Enum):
 
 
 class Entity:
-  """Class representing an entity within the dungeon game."""
+    """Class representing an entity within the dungeon game."""
 
-  def __init__ (self, game_level: GameLevel, coords: tuple[int, int]) -> None:
-    """Initialise an Entity."""
-    self.game = game_level
-    self.position = coords
+    def __init__(self, game_level: GameLevel, coords: tuple[int, int]) -> None:
+        """Initialise an Entity."""
+        self.game = game_level
+        self.position = coords
+
 
 class Player(Entity):
     """Class representing a player in the dungeon game."""

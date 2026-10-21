@@ -167,15 +167,21 @@ class GameLevel:
             valid_move = False
         return valid_move
 
-    def progress_valid(self, level:int, row: int, col: int) -> int:
+    def progress_valid(self, level: int, row: int, col: int) -> int:
         """Determine if the level/Game progress is valid."""
         if len(self.rawlevel_list) == level and self.tile_at(row, col, Tile.GOAL):
             return level
-        if level + 1 <= len(self.rawlevel_list) and level > 0 and self.tile_at(
-                        row, col, Tile.STAIR):
+        if (
+            level + 1 <= len(self.rawlevel_list)
+            and level > 0
+            and self.tile_at(row, col, Tile.STAIR)
+        ):
             return level + 1
-        if level - 1 <= len(self.rawlevel_list) and level - 1 > 0 and self.tile_at(
-                    row, col, Tile.ENTRANCE):
+        if (
+            level - 1 <= len(self.rawlevel_list)
+            and level - 1 > 0
+            and self.tile_at(row, col, Tile.ENTRANCE)
+        ):
             return level - 1
         else:
             return -1

@@ -29,9 +29,21 @@ class GameController:
         self.game_model.build_grid(self.current_level)
         self.game_renderer.draw_level(self.game_model.level)
         self.player = entities.Player(self.game_model, coordinates)
-        self.game_renderer.render_panel(self.game_renderer.panel.PLAYER_STATS, "Player", "Player details will go here for stats.")
-        self.game_renderer.render_panel(self.game_renderer.panel.KIT_STATS, "Kit", "Kit details will go here for stats.")
-        self.game_renderer.render_panel(self.game_renderer.panel.PROGRESS, "Game Progress", f"Game progress so far - Level: {self.current_level}.")
+        self.game_renderer.render_panel(
+            self.game_renderer.panel.PLAYER_STATS,
+            "Player",
+            "Player details will go here for stats.",
+        )
+        self.game_renderer.render_panel(
+            self.game_renderer.panel.KIT_STATS,
+            "Kit",
+            "Kit details will go here for stats.",
+        )
+        self.game_renderer.render_panel(
+            self.game_renderer.panel.PROGRESS,
+            "Game Progress",
+            f"Game progress so far - Level: {self.current_level}.",
+        )
 
         self.return_to_prev_map = False  # reset value
         self.redraw_map = False
@@ -45,7 +57,7 @@ class GameController:
             clock.tick(60)
             if self.redraw_map or self.return_to_prev_map:
                 self.init_level()
-            self.game_renderer.draw_EntityType(self.player.type, self.player.position)
+            self.game_renderer.draw_entity_type(self.player.type, self.player.position)
             # Render the game window
             self.game_renderer.reload_game_window()
             for event in pygame.event.get():
