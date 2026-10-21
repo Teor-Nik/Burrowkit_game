@@ -122,7 +122,7 @@ class GameLevel:
         self.formatted_level_list = LEVEL_DICT
         self.tiles = Tile
 
-    def start_position(self, level: int, movement: bool) -> None:
+    def start_position(self, level: int, movement: bool) -> tuple[int, int]:
         """Get the Row and Col of the requested level."""
         tile: Tile
         if movement:
@@ -131,11 +131,12 @@ class GameLevel:
             tile = Tile.ENTRANCE
         matched_level = RAWLEVEL_DICT[level]
         # Define a coordinate type
-        self.coordinates: tuple[int, int]
+        coordinates: tuple[int, int] = (0, 0)
         for row_position, row in enumerate(matched_level):
             for col_position, col in enumerate(row):
                 if col == tile.value:
-                    self.coordinates = (row_position, col_position)
+                    coordinates = (row_position, col_position)
+        return coordinates
 
     def build_grid(self, level: int) -> list[list[Tile]]:
         """Build the level of the map into proper Tile."""

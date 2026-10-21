@@ -23,12 +23,12 @@ class GameController:
         self.game_renderer = renderer.GameRenderer()
         # Create a GameLevel instance with the first level map
         self.game_model = level.GameLevel()
-        self.game_model.start_position(
+        coordinates = self.game_model.start_position(
             self.current_level, self.return_to_prev_map
         )
         self.game_model.build_grid(self.current_level)
         self.game_renderer.draw_level(self.game_model.level)
-        self.player = entities.Player(self.game_model, self.game_model.coordinates)
+        self.player = entities.Player(self.game_model, coordinates)
         self.game_renderer.render_panel(self.game_renderer.panel.PLAYER_STATS, "Player", "Player details will go here for stats.")
         self.game_renderer.render_panel(self.game_renderer.panel.KIT_STATS, "Kit", "Kit details will go here for stats.")
         self.game_renderer.render_panel(self.game_renderer.panel.PROGRESS, "Game Progress", f"Game progress so far - Level: {self.current_level}.")
