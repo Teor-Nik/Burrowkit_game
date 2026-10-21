@@ -27,7 +27,7 @@ HALF_HEIGHT = W_HEIGHT // 2
 PANEL_WIDTH = 200
 PANEL_HEIGHT = 200
 BLOCK_SMALL = 20
-EntityType_SMALL = 15
+OBJECT_SMALL = 12
 
 # Type alias for RGB tuple
 RGB = tuple[int, int, int]
@@ -59,7 +59,7 @@ class GameRenderer:
         self.width = W_WIDTH
         self.height = W_HEIGHT
         self.block_size = BLOCK_SMALL
-        self.EntityType_size = EntityType_SMALL
+        self.EntityType_size = OBJECT_SMALL
         self.panel = Panel
         # Set up the game window
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -165,10 +165,14 @@ class GameRenderer:
         """Draw the player on the level."""
         row_num = coords[0] * self.block_size
         col_num = coords[1] * self.block_size
-        row = round(row_num / 10) * 10
-        col = round(col_num / 10) * 10
         colour = COLOUR_ENTITIES.get(type, (0, 0, 121))
-        self.render_map_cell(colour, row, col, self.EntityType_size)
+        half_diff = (self.block_size - self.EntityType_size) / 2
+        self.render_map_cell(
+            colour,
+            round(row_num + half_diff),
+            round(col_num + half_diff),
+            self.EntityType_size,
+        )
 
     def render_map_cell(
         self, colour: tuple[int, int, int], row: int, col: int, size: int
