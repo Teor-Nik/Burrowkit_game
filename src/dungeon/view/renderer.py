@@ -5,7 +5,7 @@ from enum import Enum
 
 import pygame
 
-from dungeon.model.entities import Entity
+from dungeon.model.entities import EntityType
 from dungeon.model.level import Tile
 
 
@@ -28,7 +28,7 @@ HALF_HEIGHT = W_HEIGHT // 2
 PANEL_WIDTH = 200
 PANEL_HEIGHT = 200
 BLOCK_SMALL = 20
-ENTITY_SMALL = 15
+EntityType_SMALL = 15
 
 # Type alias for RGB tuple
 RGB = tuple[int, int, int]
@@ -43,10 +43,10 @@ COLOUR_MAP: dict[Tile, RGB] = {
     Tile.ENTRANCE: (179, 171, 171),  # blue for entry
 }
 
-COLOUR_ENTITIES: dict[Entity, RGB] = {
-    Entity.PLAYER: (144, 156, 209),  # Blue Player
-    Entity.MONSTER: (179, 20, 20),  # Red monster
-    Entity.KIT: (209, 165, 144),  # Kit brown (fawn)
+COLOUR_ENTITIES: dict[EntityType, RGB] = {
+    EntityType.PLAYER: (144, 156, 209),  # Blue Player
+    EntityType.MONSTER: (179, 20, 20),  # Red monster
+    EntityType.KIT: (209, 165, 144),  # Kit brown (fawn)
 }
 
 class GameRenderer:
@@ -59,7 +59,7 @@ class GameRenderer:
         self.width = W_WIDTH
         self.height = W_HEIGHT
         self.block_size = BLOCK_SMALL
-        self.entity_size = ENTITY_SMALL
+        self.EntityType_size = EntityType_SMALL
         self.panel = Panel
         # Set up the game window
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -152,14 +152,14 @@ class GameRenderer:
         text_surface = font.render(details, True, (94, 83, 86))
         self.screen.blit(text_surface, (coords[0] + 10, coords[1] + 40, PANEL_WIDTH, PANEL_HEIGHT))
 
-    def draw_entity(self, type: Entity, coords: tuple[int, int]) -> None:
+    def draw_EntityType(self, type: EntityType, coords: tuple[int, int]) -> None:
         """Draw the player on the level."""
         row_num = coords[0] * self.block_size
         col_num = coords[1] * self.block_size
         row = round(row_num / 10) * 10
         col = round(col_num / 10) * 10
         colour = COLOUR_ENTITIES.get(type, (0, 0, 121))
-        self.render_map_cell(colour, row, col, self.entity_size)
+        self.render_map_cell(colour, row, col, self.EntityType_size)
 
     def render_map_cell(
         self, colour: tuple[int, int, int], row: int, col: int, size: int

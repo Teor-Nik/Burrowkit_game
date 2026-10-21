@@ -5,7 +5,7 @@ from enum import Enum
 from dungeon.model.level import GameLevel
 
 
-class Entity(Enum):
+class EntityType(Enum):
     """List of Entity types."""
 
     PLAYER = 0
@@ -13,14 +13,22 @@ class Entity(Enum):
     KIT = 2
 
 
-class Player:
+class Entity:
+  """Class representing an entity within the dungeon game."""
+
+  def __init__ (self, game_level: GameLevel, coords: tuple[int, int]) -> None:
+    """Initialise an Entity."""
+    self.game = game_level
+    self.position = coords
+
+class Player(Entity):
     """Class representing a player in the dungeon game."""
 
     def __init__(self, game_level: GameLevel, coords: tuple[int, int]) -> None:
         """Initialise the Player."""
         self.game = game_level
-        self.type = Entity.PLAYER
         self.position = coords
+        self.type = EntityType.PLAYER
 
     def player_move_coords(self, coords: tuple[int, int], keyname: str) -> bool:
         """Move player to grid coordinates."""

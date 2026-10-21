@@ -45,7 +45,7 @@ class GameController:
             clock.tick(60)
             if self.redraw_map or self.return_to_prev_map:
                 self.init_level()
-            self.game_renderer.draw_entity(self.player.type, self.player.position)
+            self.game_renderer.draw_EntityType(self.player.type, self.player.position)
             # Render the game window
             self.game_renderer.reload_game_window()
             for event in pygame.event.get():
