@@ -23,12 +23,16 @@ class GameController:
         self.game_renderer = renderer.GameRenderer()
         # Create a GameLevel instance with the first level map
         self.game_model = level.GameLevel()
-        self.game_model.determain_start_position(
+        self.game_model.start_position(
             self.current_level, self.return_to_prev_map
         )
-        self.game_model.build_grid_initial(self.current_level)
+        self.game_model.build_grid(self.current_level)
         self.game_renderer.draw_level(self.game_model.level)
         self.player = entities.Player(self.game_model, self.game_model.coordinates)
+        self.game_renderer.render_panel(self.game_renderer.panel.PLAYER_STATS, "Player", "Player details will go here for stats.")
+        self.game_renderer.render_panel(self.game_renderer.panel.KIT_STATS, "Kit", "Kit details will go here for stats.")
+        self.game_renderer.render_panel(self.game_renderer.panel.PROGRESS, "Game Progress", f"Game progress so far - Level: {self.current_level}.")
+
         self.return_to_prev_map = False  # reset value
         self.redraw_map = False
 
@@ -39,7 +43,7 @@ class GameController:
         clock = pygame.time.Clock()
         while running:
             clock.tick(60)
-            if self.redraw_map:
+            if self.redraw_map or self.return_to_prev_map:
                 self.init_level()
             self.game_renderer.draw_entity(self.player.type, self.player.position)
             # Render the game window
@@ -50,32 +54,20 @@ class GameController:
                 elif event.type == pygame.KEYDOWN:
                     key_name = pygame.key.name(event.key)
                     if self.player.player_move_coords(self.player.position, key_name):
-                        if self.game_model.tile_at(
+                        level_check = self.game_model.progress_valid(
+                            self.current_level,
                             self.player.position[0],
                             self.player.position[1],
-                            self.game_model.tiles.ENTRANCE
-                        ):
-                            if self.game_model.returned_to_entrace(self.current_level):
-                                # player returning to previous map
-                                self.return_to_prev_map = True
-                                self.current_level -= 1
-                                self.redraw_map = True
-                        if self.game_model.tile_at(
-                            self.player.position[0],
-                            self.player.position[1],
-                            self.game_model.tiles.STAIR
-                        ):
-                            if self.game_model.stairs_reached(self.current_level):
-                                self.current_level += 1
-                                self.redraw_map = True
-                        if self.game_model.tile_at(
-                            self.player.position[0],
-                            self.player.position[1],
-                            self.game_model.tiles.GOAL
-                        ):
-                            if self.game_model.goal_reached(self.current_level):
-                                print("END GAME!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                                running = False
+                        )
+                        if level_check > 0 and level_check < self.current_level:
+                            self.current_level = level_check
+                            self.return_to_prev_map = True
+                        elif level_check == self.current_level:
+                            print("END GAME!!")
+                            running = False
+                        elif level_check > 0:
+                            self.current_level = level_check
+                            self.redraw_map = True
                     self.game_renderer.draw_level(self.game_model.level)
         # Quit Pygame
         pygame.quit()

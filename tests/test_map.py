@@ -46,7 +46,7 @@ def test_one_goal_all_maps(level: int) -> None:
     if len(game.rawlevel_list) == level:
         expected_result = [Tile.GOAL]
     goals = []
-    for row in game.build_grid_initial(level):
+    for row in game.build_grid(level):
         for col in row:
             if col == Tile.GOAL:
                 goals.append(col)
@@ -80,21 +80,3 @@ def test_one_stairs_per_map(level: int) -> None:
             if col == Tile.STAIR.value:
                 stairs.append(Tile.STAIR)
     assert stairs == expected_result
-
-
-@pytest.mark.parametrize("level", [1, 2, 3, 4, -1])
-def test_reaching_stairs(level: int) -> None:
-    """Test all valid levels return True. Final or Invalid levels return False."""
-    game = GameLevel()
-    expected_result = [False]
-    if len(game.rawlevel_list) == level:
-        expected_result = [False]
-    elif level < len(game.rawlevel_list) and level > 0:
-        expected_result = level + 1
-    new_level = []
-    result = game.stairs_reached(level)
-    if result:
-        new_level = level + 1
-    else:
-        new_level = [result]
-    assert new_level == expected_result

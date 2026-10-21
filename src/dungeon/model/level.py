@@ -122,7 +122,7 @@ class GameLevel:
         self.formatted_level_list = LEVEL_DICT
         self.tiles = Tile
 
-    def determain_start_position(self, level: int, movement: bool) -> None:
+    def start_position(self, level: int, movement: bool) -> None:
         """Get the Row and Col of the requested level."""
         tile: Tile
         if movement:
@@ -137,7 +137,7 @@ class GameLevel:
                 if col == tile.value:
                     self.coordinates = (row_position, col_position)
 
-    def build_grid_initial(self, level: int) -> list[list[Tile]]:
+    def build_grid(self, level: int) -> list[list[Tile]]:
         """Build the level of the map into proper Tile."""
         matched_level = RAWLEVEL_DICT[level]
         map_grid: list[list[Tile]] = [
@@ -166,75 +166,23 @@ class GameLevel:
             valid_move = False
         return valid_move
 
+    def progress_valid(self, level:int, row: int, col: int) -> int:
+        """Determine if the level/Game progress is valid."""
+        if len(self.rawlevel_list) == level and self.tile_at(row, col, Tile.GOAL):
+            return level
+        if level + 1 <= len(self.rawlevel_list) and level > 0 and self.tile_at(
+                        row, col, Tile.STAIR):
+            return level + 1
+        if level - 1 <= len(self.rawlevel_list) and level - 1 > 0 and self.tile_at(
+                    row, col, Tile.ENTRANCE):
+            return level - 1
+        else:
+            return -1
+
     def tile_at(self, row: int, col: int, type_check: Tile) -> bool:
         """Return the type of Tile at a specific position on the current level."""
         new_tile = self.level[row][col]
         if new_tile == type_check:
-            return True
-        else:
-            return False
-
-    # def is_stairs(self, coords: tuple[int, int]) -> bool:
-    #     """Return the type of Tile at a specific position on the current level."""
-    #     row = coords[0]
-    #     col = coords[1]
-    #     if not isinstance(row, int):
-    #         raise TypeError("First element is not an integer.")
-    #     if not isinstance(col, int):
-    #         raise TypeError("First element is not an integer.")
-    #     tile = self.level[row][col]
-    #     if tile == Tile.STAIR:
-    #         return True
-    #     else:
-    #         return False
-
-    # def is_returned_to_entrace(self, coords: tuple[int, int]) -> bool:
-    #     """Return the type of Tile at a specific position on the current level."""
-    #     row = coords[0]
-    #     col = coords[1]
-    #     if not isinstance(row, int):
-    #         raise TypeError("First element is not an integer.")
-    #     if not isinstance(col, int):
-    #         raise TypeError("First element is not an integer.")
-    #     tile = self.level[row][col]
-    #     if tile == Tile.ENTRANCE:
-    #         return True
-    #     else:
-    #         return False
-
-    # def is_goal(self, coords: tuple[int, int]) -> bool:
-    #     """Return the type of Tile at a specific position on the current level."""
-    #     row = coords[0]
-    #     col = coords[1]
-    #     if not isinstance(row, int):
-    #         raise TypeError("First element is not an integer.")
-    #     if not isinstance(col, int):
-    #         raise TypeError("First element is not an integer.")
-    #     tile = self.level[row][col]
-    #     if tile == Tile.GOAL:
-    #         return True
-    #     else:
-    #         return False
-
-    def goal_reached(self, level: int) -> bool:
-        """Determine valid movement final level reached (allows for bonus level)."""
-        if len(self.rawlevel_list) == level:
-            return True
-        else:
-            return False
-
-    def stairs_reached(self, level: int) -> bool:
-        """Determine valid movement to the next level."""
-        if len(self.rawlevel_list) == level:
-            return False
-        elif level + 1 <= len(self.rawlevel_list) and level > 0:
-            return True
-        else:
-            return False
-
-    def returned_to_entrace(self, level: int) -> bool:
-        """Determine valid movement down a level."""
-        if level - 1 <= len(self.rawlevel_list) and level - 1 > 0:
             return True
         else:
             return False
