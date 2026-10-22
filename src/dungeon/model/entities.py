@@ -49,7 +49,7 @@ class Player(Entity):
             new_col -= 1
         elif keyname == "right":
             new_col += 1
-        if self.game.valid_move(new_row, new_col, row_position, col_position):
-            self.position = (new_row, new_col)
+        if self.game.validate_update(new_row, new_col, row_position, col_position):
+            self.position = self.game.game_progress(new_row, new_col)
             return True
         return False

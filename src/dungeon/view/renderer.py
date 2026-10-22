@@ -179,3 +179,8 @@ class GameRenderer:
     ) -> None:
         """Render a single cell based on the cell type passed in."""
         pygame.draw.rect(self.screen, colour, (col, row, size, size))
+
+    @staticmethod
+    def show_error(message: str) -> None:
+        """Display error message to log."""
+        print(f"Error: {message}")
