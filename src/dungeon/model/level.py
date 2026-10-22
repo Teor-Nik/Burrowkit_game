@@ -121,11 +121,11 @@ class GameLevel:
         self.rawlevel_list = RAWLEVEL_DICT
         self.formatted_level_list = LEVEL_DICT
         self.tiles = Tile
+        self.current_level = 1
         self.start_game()
 
     def start_game(self) -> None:
         """Start game from level 1."""
-        self.current_level = 1
         self.start_position = self.level_position(False)
         self.build_grid()
         self.game_finished = False

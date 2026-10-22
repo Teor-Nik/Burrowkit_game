@@ -45,8 +45,10 @@ def test_one_goal_all_maps(level: int) -> None:
     expected_result = []
     if len(game.rawlevel_list) == level:
         expected_result = [Tile.GOAL]
+    game.current_level = level
+    game.build_grid()
     goals = []
-    for row in game.build_grid(level):
+    for row in game.level:
         for col in row:
             if col == Tile.GOAL:
                 goals.append(col)
