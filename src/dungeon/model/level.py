@@ -175,13 +175,13 @@ class GameLevel:
         """Progress game level and set new position if needed."""
         position = (new_row, new_col)
         temp_curr_level = self.current_level
-        if (self.tile_at(new_row, new_col, Tile.GOAL)):
+        if self.tile_at(new_row, new_col, Tile.GOAL):
             print("END GAME!!!!!!!!!!!!!!")
             self.end_game()
-        if (self.tile_at(new_row, new_col, Tile.STAIR)):
+        if self.tile_at(new_row, new_col, Tile.STAIR):
             self.current_level += 1
             position = self.level_position(False)
-        if (self.tile_at(new_row, new_col, Tile.ENTRANCE)):
+        if self.tile_at(new_row, new_col, Tile.ENTRANCE):
             self.current_level -= 1
             position = self.level_position(True)
         if self.current_level != temp_curr_level:
@@ -197,7 +197,7 @@ class GameLevel:
         else:
             return False
 
-    def build_grid(self) -> None: #list[list[Tile]]:
+    def build_grid(self) -> None:
         """Build the level of the map into proper Tile."""
         map_grid: list[list[Tile]] = [
             [Tile(col) for col in row] for row in RAWLEVEL_DICT[self.current_level]

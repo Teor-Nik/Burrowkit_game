@@ -10,9 +10,7 @@ class GameController:
     """Class responsible for controlling the game flow."""
 
     def __init__(
-            self,
-            level_model: level.GameLevel,
-            view_renderer: renderer.GameRenderer
+        self, level_model: level.GameLevel, view_renderer: renderer.GameRenderer
     ) -> None:
         """Initialize the game controller."""
         self.level_model = level_model
@@ -61,6 +59,6 @@ class GameController:
                         self.player.player_move_coords(self.player.position, key_name)
                         self.view.draw_level(self.level_model.level)
         except ValueError as e:
-                self.view.show_error(str(e))
+            self.view.show_error(str(e))
         # Quit Pygame
         pygame.quit()
