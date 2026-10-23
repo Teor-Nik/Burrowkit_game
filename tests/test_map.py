@@ -4,13 +4,19 @@ import pytest
 
 from dungeon.model.level import GameLevel, Tile
 
+LEVEL_TESTING_MAP = [
+    [1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 9, 0, 1, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1],
+]
+
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
-def test_row_length_all_maps(level: int) -> None:
+def test_map_rows(level: int) -> None:
     """Test that each row has the same length for all maps."""
-    game = GameLevel()
+    game = GameLevel(level)
     all_lengths = []
-    for row in game.rawlevel_list[level]:
+    for row_pos, row in enumerate(game.level):
         row_length = len(row)
         all_lengths.append(row_length)
     unique_values = list(set(all_lengths))
@@ -18,67 +24,69 @@ def test_row_length_all_maps(level: int) -> None:
 
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
-def test_full_size_all_maps(level: int) -> None:
+def test_map_sizes(level: int) -> None:
     """Test that each map has the same overall size."""
-    game = GameLevel()
+    game = GameLevel(level)
     all_lengths = 0
-    for row in game.rawlevel_list[level]:
+    for row_pos, row in enumerate(game.level):
         all_lengths += len(row)
     assert all_lengths == 400
 
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
-def test_all_cells_all_maps(level: int):
-    """Test that all tiles in the maps are legitemate tiles."""
-    game = GameLevel()
-    match_tile: int = -1
-    for row in game.rawlevel_list[level]:
-        for col in row:
-            match_tile = game.tiles(col).value
-    assert match_tile in {0, 1, 2, 3, 4}
+def test_cells_in_maps(level: int) -> None:
+    """Test that all tiles in the maps are legitimate tiles."""
+    game = GameLevel(level)
+    match = all(
+        isinstance(tile, Tile) for row_tiles in game.level for tile in row_tiles
+    )
+    assert match
+
+
+def test_cells_in_malformed_map() -> None:
+    """Test that a malformed map is flagged."""
+    game = GameLevel(1)
+    with pytest.raises(ValueError, match="not found"):
+        game.check_grid(LEVEL_TESTING_MAP)
 
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
-def test_one_goal_all_maps(level: int) -> None:
+def test_maxlevel_has_goals(level: int) -> None:
     """Test that the final level has a goal, but all others do not."""
-    game = GameLevel()
+    game = GameLevel(level)
     expected_result = []
-    if len(game.rawlevel_list) == level:
+    if game.max_level == level:
         expected_result = [Tile.GOAL]
-    game.current_level = level
-    game.build_grid()
     goals = []
-    for row in game.level:
-        for col in row:
-            if col == Tile.GOAL:
-                goals.append(col)
+    for row_pos, row_tiles in enumerate(game.level):
+        for col_pos, tile in enumerate(row_tiles):
+            if tile == Tile.GOAL:
+                goals.append(tile)
     assert goals == expected_result
 
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
-def test_one_entrance_per_map(level: int) -> None:
+def test_every_level_has_entrance(level: int) -> None:
     """Test that each map has an entrance."""
-    game = GameLevel()
-    level_map = game.rawlevel_list[level]
+    game = GameLevel(level)
     entrances = []
-    for row in level_map:
-        for col in row:
-            if col == Tile.ENTRANCE.value:
+    for row_pos, row_tiles in enumerate(game.level):
+        for col_pos, tile in enumerate(row_tiles):
+            if tile == Tile.ENTRANCE:
                 entrances.append(Tile.ENTRANCE)
     assert entrances == [Tile.ENTRANCE]
 
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
-def test_one_stairs_per_map(level: int) -> None:
+def test_every_level_has_stairs(level: int) -> None:
     """Test that each map has a set of stairs to the next map, excluding final level."""
-    game = GameLevel()
-    level_map = game.rawlevel_list[level]
+    game = GameLevel(level)
     expected_result = [Tile.STAIR]
-    if len(game.rawlevel_list) == level:
+    if game.max_level == level:
         expected_result = []
     stairs = []
-    for row in level_map:
-        for col in row:
-            if col == Tile.STAIR.value:
+    for row_pos, row_tiles in enumerate(game.level):
+        for col_pos, tile in enumerate(row_tiles):
+            if tile == Tile.STAIR:
                 stairs.append(Tile.STAIR)
     assert stairs == expected_result

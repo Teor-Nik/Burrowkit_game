@@ -92,7 +92,7 @@ I commit to Git after each milestone.
 11. **Polish:** a title screen, game over and win conditions, then simple sprites to replace the coloured squares.
 
 <!-- Current milestone: update this line as you go so Claude knows where you are. -->
-**Current milestone:** 1
+**Current milestone:** 2
 
 
 ## Develop good habits from day one

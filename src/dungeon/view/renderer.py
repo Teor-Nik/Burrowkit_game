@@ -32,8 +32,6 @@ OBJECT_SMALL = 12
 # Type alias for RGB tuple
 RGB = tuple[int, int, int]
 
-DRAW_COORDINATES = tuple([int, int])
-
 COLOUR_MAP: dict[Tile, RGB] = {
     Tile.EMPTY: (30, 117, 82),  # Dark green background
     Tile.WALL: (143, 132, 121),  # mossy brown
@@ -54,16 +52,14 @@ class GameRenderer:
 
     def __init__(self) -> None:
         """Initialise the game window."""
+        self.panel = Panel
         # Initialize Pygame
         pygame.init()
-        self.width = W_WIDTH
-        self.height = W_HEIGHT
-        self.block_size = BLOCK_SMALL
-        self.EntityType_size = OBJECT_SMALL
-        self.panel = Panel
         # Set up the game window
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Burrowkit Game: Dungeon Model")
+        self.screen = pygame.display.set_mode((W_WIDTH, W_HEIGHT))
+        pygame.display.set_caption("Burrowkit Game")
+        self.header_font = pygame.font.SysFont(None, 45)
+        self.detail_font = pygame.font.SysFont(None, 20)
         self.draw_quadrants()
 
     # Function to draw the 4 quadrants
@@ -128,18 +124,12 @@ class GameRenderer:
 
     def draw_level(self, level_map: list[list[Tile]]) -> None:
         """Draw each level onto the map on the screen."""
-        coords = self.determine_quadrant_corner(self.map_section)
-        row = coords[0]
-        col = coords[1]
-        temp_col = 0  # store the initial x to reset after each row
-        for row_tiles in level_map:
-            for col_tile in row_tiles:
-                colour = COLOUR_MAP.get(col_tile, (143, 132, 121))
-                self.render_map_cell(colour, row, col, self.block_size)
-                col += self.block_size
-            row += self.block_size
-
-            col = temp_col  # reset x after each row
+        for row_position, row_tiles in enumerate(level_map):
+            for col_position, tile in enumerate(row_tiles):
+                colour = COLOUR_MAP[tile]
+                row = row_position * BLOCK_SMALL
+                col = col_position * BLOCK_SMALL
+                self.render_map_cell(colour, row, col, BLOCK_SMALL)
 
     def render_panel(self, panel: Panel, label: str, details: str) -> None:
         """Render the panel based on the Panel type and information."""
@@ -150,28 +140,27 @@ class GameRenderer:
             coords = self.determine_quadrant_corner(self.kit_section)
         if panel == Panel.PROGRESS:
             coords = self.determine_quadrant_corner(self.overall_section)
-        font = pygame.font.SysFont(None, 45)
-        text_surface = font.render(label, True, (94, 83, 86))
+        text_surface = self.header_font.render(label, True, (94, 83, 86))
         self.screen.blit(
             text_surface, (coords[0] + 10, coords[1] + 10, PANEL_WIDTH, PANEL_HEIGHT)
         )
-        font = pygame.font.SysFont(None, 20)
-        text_surface = font.render(details, True, (94, 83, 86))
+
+        text_surface = self.detail_font.render(details, True, (94, 83, 86))
         self.screen.blit(
             text_surface, (coords[0] + 10, coords[1] + 40, PANEL_WIDTH, PANEL_HEIGHT)
         )
 
     def draw_entity_type(self, type: EntityType, coords: tuple[int, int]) -> None:
         """Draw the player on the level."""
-        row_num = coords[0] * self.block_size
-        col_num = coords[1] * self.block_size
-        colour = COLOUR_ENTITIES.get(type, (0, 0, 121))
-        half_diff = (self.block_size - self.EntityType_size) / 2
+        row_num = coords[0] * BLOCK_SMALL
+        col_num = coords[1] * BLOCK_SMALL
+        colour = COLOUR_ENTITIES[type]
+        half_diff = (BLOCK_SMALL - OBJECT_SMALL) / 2
         self.render_map_cell(
             colour,
             round(row_num + half_diff),
             round(col_num + half_diff),
-            self.EntityType_size,
+            OBJECT_SMALL,
         )
 
     def render_map_cell(
