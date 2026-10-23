@@ -48,7 +48,7 @@ class GameController:
                         self.level_model.end_game()
                     elif event.type == pygame.KEYDOWN:
                         key_name = pygame.key.name(event.key)
-                        self.player.player_move_coords(self.player.position, key_name)
+                        self.player.move_direction(key_name)
         except ValueError as e:
             self.view.show_error(str(e))
         # Quit Pygame

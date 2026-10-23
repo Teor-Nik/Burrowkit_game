@@ -13,6 +13,14 @@ class EntityType(Enum):
     KIT = 2
 
 
+class Direction(Enum):
+    """List of possible movement directions."""
+
+    up = (1, 0)
+    down = (-1, 0)
+    left = (0, 1)
+    right = (0, -1)
+
 class Entity:
     """Class representing an entity within the dungeon game."""
 
@@ -27,28 +35,23 @@ class Player(Entity):
 
     def __init__(self, game_level: GameLevel, coords: tuple[int, int]) -> None:
         """Initialise the Player."""
-        self.game = game_level
-        self.position = coords
+        super().__init__(game_level, coords)
         self.type = EntityType.PLAYER
 
-    def player_move_coords(self, coords: tuple[int, int], keyname: str) -> bool:
+    def move_direction(self, movement: str) -> bool:
         """Move player to grid coordinates."""
-        row_position = coords[0]
-        col_position = coords[1]
+        row_position = self.position[0]
+        col_position = self.position[1]
         if not isinstance(row_position, int):
             raise TypeError("First element is not an integer.")
         if not isinstance(col_position, int):
             raise TypeError("First element is not an integer.")
         new_row = row_position
         new_col = col_position
-        if keyname == "up":
-            new_row -= 1
-        elif keyname == "down":
-            new_row += 1
-        elif keyname == "left":
-            new_col -= 1
-        elif keyname == "right":
-            new_col += 1
+        for position, direction in enumerate(Direction):
+            if direction.name == movement:
+                new_row = self.position[0] - direction.value[0]
+                new_col = self.position[1] - direction.value[1]
         if self.game.validate_update(new_row, new_col, row_position, col_position):
             self.position = self.game.game_progress(new_row, new_col)
             return True
