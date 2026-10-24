@@ -9,7 +9,7 @@ from dungeon.view import renderer
 def main() -> None:
     """Burrowkit Game program."""
     # Create a new game instance
-    model_level = level.GameLevel(1)
+    model_level = level.GameLevel(1, None)
     view_renderer = renderer.GameRenderer()
     controller = game_controller.GameController(model_level, view_renderer)
     controller.start_game()

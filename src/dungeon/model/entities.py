@@ -28,6 +28,7 @@ class Entity:
         """Initialise an Entity."""
         self.game = game_level
         self.position = coords
+        self.creature = EntityType
 
 
 class Player(Entity):
@@ -36,23 +37,15 @@ class Player(Entity):
     def __init__(self, game_level: GameLevel, coords: tuple[int, int]) -> None:
         """Initialise the Player."""
         super().__init__(game_level, coords)
-        self.type = EntityType.PLAYER
+        self.creature = EntityType.PLAYER
 
     def move_direction(self, movement: str) -> bool:
         """Move player to grid coordinates."""
-        row_position = self.position[0]
-        col_position = self.position[1]
-        if not isinstance(row_position, int):
-            raise TypeError("First element is not an integer.")
-        if not isinstance(col_position, int):
-            raise TypeError("First element is not an integer.")
-        new_row = row_position
-        new_col = col_position
         for position, direction in enumerate(Direction):
             if direction.name == movement:
                 new_row = self.position[0] - direction.value[0]
                 new_col = self.position[1] - direction.value[1]
-        if self.game.validate_update(new_row, new_col, row_position, col_position):
-            self.position = self.game.game_progress(new_row, new_col)
-            return True
+                if self.game.validate_update(new_row, new_col):
+                    self.position = self.game.game_progress(new_row, new_col)
+                    return True
         return False

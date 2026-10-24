@@ -25,7 +25,7 @@ class GameController:
                 clock.tick(60)
                 self.view.draw_quadrants()
                 self.view.draw_level(self.level_model.level)
-                self.view.draw_entity_type(self.player.type, self.player.position)
+                self.view.draw_entity(self.player.creature, self.player.position)
                 self.view.render_panel(
                     self.view.panel.PLAYER_STATS,
                     "Player",

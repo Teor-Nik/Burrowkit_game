@@ -150,7 +150,7 @@ class GameRenderer:
             text_surface, (coords[0] + 10, coords[1] + 40, PANEL_WIDTH, PANEL_HEIGHT)
         )
 
-    def draw_entity_type(self, type: EntityType, coords: tuple[int, int]) -> None:
+    def draw_entity(self, type: EntityType, coords: tuple[int, int]) -> None:
         """Draw the player on the level."""
         row_num = coords[0] * BLOCK_SMALL
         col_num = coords[1] * BLOCK_SMALL

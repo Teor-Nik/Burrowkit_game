@@ -1,6 +1,7 @@
 """Burrowkit Game Dungeon level."""
 
 from enum import Enum
+from typing import Optional
 
 
 class Tile(Enum):
@@ -114,9 +115,13 @@ RAWLEVEL_DICT: dict[int, list[list[int]]] = {
 class GameLevel:
     """Class representing a level in the dungeon game."""
 
-    def __init__(self, level: int) -> None:
+    def __init__(self, level: int, custom_map: list[list[int]] | None) -> None:
         """Initialise the Game Level."""
         self.current_level = level
+        if custom_map is not None:
+            print("Custom Map in use.")
+            RAWLEVEL_DICT.clear()
+            RAWLEVEL_DICT.update({1: custom_map})
         self.max_level = len(RAWLEVEL_DICT)
         self.start_game()
 
@@ -145,23 +150,11 @@ class GameLevel:
                     coordinates = (row_position, col_position)
         return coordinates
 
-    def validate_update(
-        self,
-        new_row: int,
-        new_col: int,
-        curr_row: int,
-        curr_col: int,
-    ) -> bool:
+    def validate_update(self, new_row: int, new_col: int) -> bool:
         """Determine if the requested update is valid, if valid set start position."""
         valid_move = False
-        new_tile = self.level[new_row][new_col]
-        curr_tile = self.level[curr_row][curr_col]
         if self.tile_at(new_row, new_col) != Tile.WALL:
             valid_move = True
-        if curr_tile == Tile.STAIR and new_tile == Tile.WALL:
-            valid_move = False
-        if curr_tile == Tile.ENTRANCE and new_tile == Tile.WALL:
-            valid_move = False
         return valid_move
 
     def game_progress(self, new_row: int, new_col: int) -> tuple[int, int]:
@@ -182,8 +175,10 @@ class GameLevel:
 
     def tile_at(self, row: int, col: int) -> Tile:
         """Return the type of Tile at a specific position on the current level."""
-        new_tile = self.level[row][col]
-        return new_tile
+        if row < 0 or col < 0:
+            raise ValueError("Error: Map out of bounds error occurred.")
+        tile = self.level[row][col]
+        return tile
 
     def check_grid(self, level_map: list[list[int]]) -> None:
         """Check that the grid requested is valid."""

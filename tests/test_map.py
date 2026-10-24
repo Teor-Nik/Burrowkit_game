@@ -14,7 +14,7 @@ LEVEL_TESTING_MAP = [
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_map_rows(level: int) -> None:
     """Test that each row has the same length for all maps."""
-    game = GameLevel(level)
+    game = GameLevel(level, None)
     all_lengths = []
     for row_pos, row in enumerate(game.level):
         row_length = len(row)
@@ -26,7 +26,7 @@ def test_map_rows(level: int) -> None:
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_map_sizes(level: int) -> None:
     """Test that each map has the same overall size."""
-    game = GameLevel(level)
+    game = GameLevel(level, None)
     all_lengths = 0
     for row_pos, row in enumerate(game.level):
         all_lengths += len(row)
@@ -36,24 +36,17 @@ def test_map_sizes(level: int) -> None:
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_cells_in_maps(level: int) -> None:
     """Test that all tiles in the maps are legitimate tiles."""
-    game = GameLevel(level)
+    game = GameLevel(level, None)
     match = all(
         isinstance(tile, Tile) for row_tiles in game.level for tile in row_tiles
     )
     assert match
 
 
-def test_cells_in_malformed_map() -> None:
-    """Test that a malformed map is flagged."""
-    game = GameLevel(1)
-    with pytest.raises(ValueError, match="not found"):
-        game.check_grid(LEVEL_TESTING_MAP)
-
-
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_maxlevel_has_goals(level: int) -> None:
     """Test that the final level has a goal, but all others do not."""
-    game = GameLevel(level)
+    game = GameLevel(level, None)
     expected_result = []
     if game.max_level == level:
         expected_result = [Tile.GOAL]
@@ -68,7 +61,7 @@ def test_maxlevel_has_goals(level: int) -> None:
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_every_level_has_entrance(level: int) -> None:
     """Test that each map has an entrance."""
-    game = GameLevel(level)
+    game = GameLevel(level, None)
     entrances = []
     for row_pos, row_tiles in enumerate(game.level):
         for col_pos, tile in enumerate(row_tiles):
@@ -80,7 +73,7 @@ def test_every_level_has_entrance(level: int) -> None:
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_every_level_has_stairs(level: int) -> None:
     """Test that each map has a set of stairs to the next map, excluding final level."""
-    game = GameLevel(level)
+    game = GameLevel(level, None)
     expected_result = [Tile.STAIR]
     if game.max_level == level:
         expected_result = []
@@ -90,3 +83,9 @@ def test_every_level_has_stairs(level: int) -> None:
             if tile == Tile.STAIR:
                 stairs.append(Tile.STAIR)
     assert stairs == expected_result
+
+
+def test_cells_in_malformed_map() -> None:
+    """Test that a malformed map is flagged."""
+    with pytest.raises(ValueError, match="not found"):
+        GameLevel(1, LEVEL_TESTING_MAP)
