@@ -104,25 +104,25 @@ LEVEL_4_MAP = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
-RAWLEVEL_DICT: dict[int, list[list[int]]] = {
-    1: LEVEL_1_MAP,
-    2: LEVEL_2_MAP,
-    3: LEVEL_3_MAP,
-    4: LEVEL_4_MAP,
-}
-
 
 class GameLevel:
     """Class representing a level in the dungeon game."""
 
-    def __init__(self, level: int, custom_map: list[list[int]] | None) -> None:
+    def __init__(self, level: int, custom_map: dict[int, list[list[int]]] | None) -> None:
         """Initialise the Game Level."""
         self.current_level = level
         if custom_map is not None:
-            print("Custom Map in use.")
-            RAWLEVEL_DICT.clear()
-            RAWLEVEL_DICT.update({1: custom_map})
-        self.max_level = len(RAWLEVEL_DICT)
+            print("Log: Custom Map levels in use.")
+            map_dict = custom_map
+        else:
+            map_dict: dict[int, list[list[int]]] = {
+                1: LEVEL_1_MAP,
+                2: LEVEL_2_MAP,
+                3: LEVEL_3_MAP,
+                4: LEVEL_4_MAP,
+            }
+        self.rawlevel_dict = map_dict
+        self.max_level = len(self.rawlevel_dict)
         self.start_game()
 
     def start_game(self) -> None:
@@ -144,7 +144,7 @@ class GameLevel:
             tile = Tile.ENTRANCE
         # Define a coordinate type
         coordinates: tuple[int, int] = (0, 0)
-        for row_position, row_tile in enumerate(RAWLEVEL_DICT[self.current_level]):
+        for row_position, row_tile in enumerate(self.rawlevel_dict[self.current_level]):
             for col_position, raw_col in enumerate(row_tile):
                 if raw_col == tile.value:
                     coordinates = (row_position, col_position)
@@ -164,11 +164,13 @@ class GameLevel:
         if self.tile_at(new_row, new_col) == Tile.GOAL:
             self.end_game()
         if self.tile_at(new_row, new_col) == Tile.STAIR:
-            self.current_level += 1
-            position = self.level_position(False)
+            if self.current_level + 1 < self.max_level:
+                self.current_level += 1
+                position = self.level_position(False)
         if self.tile_at(new_row, new_col) == Tile.ENTRANCE:
-            self.current_level -= 1
-            position = self.level_position(True)
+            if self.current_level - 1 > 0:
+                self.current_level -= 1
+                position = self.level_position(True)
         if self.current_level != temp_curr_level:
             self.build_grid()
         return position
@@ -192,8 +194,8 @@ class GameLevel:
 
     def build_grid(self) -> None:
         """Build the level of the map into proper Tile."""
-        self.check_grid(RAWLEVEL_DICT[self.current_level])
+        self.check_grid(self.rawlevel_dict[self.current_level])
         map_grid: list[list[Tile]] = [
-            [Tile(col) for col in row] for row in RAWLEVEL_DICT[self.current_level]
+            [Tile(col) for col in row] for row in self.rawlevel_dict[self.current_level]
         ]
         self.level = map_grid

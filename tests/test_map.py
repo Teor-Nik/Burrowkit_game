@@ -1,4 +1,4 @@
-"""GUI tests: checks the maps build."""
+"""Burrowkit Game: Tests the level/map functionality and validation."""
 
 import pytest
 
@@ -10,6 +10,7 @@ LEVEL_TESTING_MAP = [
     [1, 1, 1, 1, 1, 1, 1],
 ]
 
+map_list: dict[int, list[list[int]]] = {1: LEVEL_TESTING_MAP}
 
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_map_rows(level: int) -> None:
@@ -88,4 +89,4 @@ def test_every_level_has_stairs(level: int) -> None:
 def test_cells_in_malformed_map() -> None:
     """Test that a malformed map is flagged."""
     with pytest.raises(ValueError, match="not found"):
-        GameLevel(1, LEVEL_TESTING_MAP)
+        GameLevel(1, map_list)
