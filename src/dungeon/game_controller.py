@@ -40,8 +40,8 @@ class GameController:
                 self.view.draw_level(self.level_model.level)
                 self.view.draw_entity(self.player.creature, self.player.position)
                 if not self.player.player_turn:
-                    for pos, entity in enumerate(self.monster_tracker.entities_list):
-                        entity.move_direction()
+                    for entity in enumerate(self.monster_tracker.entities_list):
+                        entity[1].move_direction(self.player.position)
                 for mon in self.monster_tracker.entities_list:
                     self.view.draw_entity(mon.creature, mon.position)
                 self.player.player_turn = True

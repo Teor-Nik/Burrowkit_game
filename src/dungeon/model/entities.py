@@ -82,19 +82,34 @@ class Monster(Entity):
         self.creature = EntityType.MONSTER
         self.monster_type = monster_type
 
-    def move_direction(self) -> bool:
+    def move_direction(self, player_pos: tuple[int, int]) -> bool:
         """Move player to grid coordinates."""
         valid_movement = False
-        while not valid_movement:
-            movement = round(random.uniform(1, len(Direction)))
-            for position, direction in enumerate(Direction):
-                if movement == direction.value[2]:
-                    new_row = self.position[0] - direction.value[0]
-                    new_col = self.position[1] - direction.value[1]
-                    if self.game.validate_nonplayer_update(new_row, new_col):
-                        self.position = (new_row, new_col)
-                        valid_movement = True
+        if self.check_player_distance(player_pos):
+            print ("here - bfs path finder point")
+            # TODO bfs code - current mostner pause if close.
+        else:
+            while not valid_movement:
+                movement = round(random.uniform(1, len(Direction)))
+                for position, direction in enumerate(Direction):
+                    if movement == direction.value[2]:
+                        new_row = self.position[0] - direction.value[0]
+                        new_col = self.position[1] - direction.value[1]
+                        if self.game.validate_nonplayer_update(new_row, new_col):
+                            self.position = (new_row, new_col)
+                            valid_movement = True
         return valid_movement
+
+    def check_player_distance(self, player_pos: tuple[int, int]) -> bool:
+        """Check the distance to the player, if close return True."""
+        row = player_pos[0] - self.position[0]
+        col = player_pos[1] - self.position[1]
+        dist = (3, -3)  # number of tiles away to match against (any direction)
+        valid_path = False
+        # if within 3 tiles of the player in any direction return true
+        if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
+            valid_path = True
+        return valid_path
 
 
 class EntityModel:
