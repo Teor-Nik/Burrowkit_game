@@ -1,6 +1,7 @@
 """Burrowkit Game Dungeon entities."""
 
 import random
+from collections import deque
 from enum import Enum
 
 from dungeon.model.level import Difficulty, GameLevel
@@ -82,19 +83,31 @@ class Monster(Entity):
         self.creature = EntityType.MONSTER
         self.monster_type = monster_type
 
-    def move_direction(self, player_pos: tuple[int, int]) -> bool:
+    def move_mon_direction(self, player_pos: tuple[int, int]) -> bool:
         """Move player to grid coordinates."""
         valid_movement = False
         if self.check_player_distance(player_pos):
-            print ("here - bfs path finder point")
-            # TODO bfs code - current mostner pause if close.
+            print("current mons at: ", self.position)
+            path = self.bfs_pathfinder(player_pos)
+            next_pos = self.position
+            if path is not None:
+                result = path[-2:-1]
+                check_next_pos = result[0] if result else None
+                if (
+                    isinstance(check_next_pos,(tuple))
+                    and check_next_pos != self.position
+                    and check_next_pos != player_pos
+                ):
+                    next_pos = check_next_pos
+            self.position = (next_pos[0], next_pos[1])
+            valid_movement = True
         else:
             while not valid_movement:
                 movement = round(random.uniform(1, len(Direction)))
-                for position, direction in enumerate(Direction):
-                    if movement == direction.value[2]:
-                        new_row = self.position[0] - direction.value[0]
-                        new_col = self.position[1] - direction.value[1]
+                for direction in enumerate(Direction):
+                    if movement == direction[1].value[2]:
+                        new_row = self.position[0] - direction[1].value[0]
+                        new_col = self.position[1] - direction[1].value[1]
                         if self.game.validate_nonplayer_update(new_row, new_col):
                             self.position = (new_row, new_col)
                             valid_movement = True
@@ -104,12 +117,42 @@ class Monster(Entity):
         """Check the distance to the player, if close return True."""
         row = player_pos[0] - self.position[0]
         col = player_pos[1] - self.position[1]
-        dist = (3, -3)  # number of tiles away to match against (any direction)
+        dist = (5, -5)  # number of tiles away to match against (any direction)
         valid_path = False
         # if within 3 tiles of the player in any direction return true
         if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
             valid_path = True
         return valid_path
+
+    def bfs_pathfinder(self, player_pos: tuple[int, int]) -> list[tuple[int, int]] | None:
+        """Find the best path towards the players curernt position."""
+        start = self.position
+        print("player at:", player_pos)
+        queue = deque([start])
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
+        while queue:
+            current_pos = queue.popleft()
+            qrow, qcol = current_pos
+            if current_pos == player_pos:
+               # print("dx:", current_pos)
+                path = []
+                curr = current_pos
+                while curr is not None:
+                    curr = parent[curr]
+                    if curr is not None:
+                        #print("queue: ", curr)
+                        path.append(curr)
+                return path
+
+            for direction in enumerate(Direction):
+                setrow = qrow + direction[1].value[0]
+                setcol = qcol + direction[1].value[1]
+                neighbor_pos = (setrow, setcol)
+                if (self.game.validate_nonplayer_update(setrow, setcol)
+                    and neighbor_pos not in parent):
+                    parent[neighbor_pos] = current_pos
+                    queue.append(neighbor_pos)
+        return None
 
 
 class EntityModel:
