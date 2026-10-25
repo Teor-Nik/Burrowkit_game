@@ -12,6 +12,7 @@ LEVEL_TESTING_MAP = [
 
 map_list: dict[int, list[list[int]]] = {1: LEVEL_TESTING_MAP}
 
+
 @pytest.mark.parametrize("level", [1, 2, 3, 4])
 def test_map_rows(level: int) -> None:
     """Test that each row has the same length for all maps."""

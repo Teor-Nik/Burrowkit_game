@@ -173,3 +173,8 @@ class GameRenderer:
     def show_error(message: str) -> None:
         """Display error message to log."""
         print(f"Error: {message}")
+
+    @staticmethod
+    def show_log(message: str) -> None:
+        """Display note message to log."""
+        print(f"Note: {message}")
