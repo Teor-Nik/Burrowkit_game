@@ -26,7 +26,7 @@ class GameController:
         """Initialize the game controller."""
         self.level_model = level_model
         self.view = view_renderer
-        self.monster_tracker = entities.EntityModel()
+        self.monster_tracker = entities.EntityModel(level_model)
         self.player = entities.Player(self.level_model, self.level_model.start_position)
         self.monster_tracker.generate_monsters(self.level_model)
 
@@ -38,12 +38,16 @@ class GameController:
                 clock.tick(60)
                 self.view.draw_quadrants()
                 self.view.draw_level(self.level_model.level)
-                self.view.draw_entity(self.player.creature, self.player.position)
+                self.view.draw_entity(self.player.creature, None, self.player.position)
                 if not self.player.player_turn:
-                    for entity in enumerate(self.monster_tracker.entities_list):
-                        entity[1].move_mon_direction(self.player.position)
+                    self.monster_tracker.move_monsters(self.player.position)
+                    # for entity in enumerate(self.monster_tracker.entities_list):
+                    #     entity[1].move_mon_direction(self.monster_tracker.entities_list, self.player.position)
                 for mon in self.monster_tracker.entities_list:
-                    self.view.draw_entity(mon.creature, mon.position)
+                    if mon.visible:
+                        self.view.draw_entity(
+                            mon.creature, mon.monster_type, mon.position
+                        )
                 self.player.player_turn = True
                 player_stats_text = (
                     "Player details will go here for stats.\n"
@@ -59,7 +63,7 @@ class GameController:
                 )
                 game_progress_test = (
                     f"Game progress so far - Level: {self.level_model.current_level}.\n"
-                    f"Difficulty Rating: {self.level_model.difficulty}"
+                    f"Difficulty Rating: {self.level_model.difficulty}\n"
                     f"Monster Positions: {self.monster_tracker.monster_stats()}"
                 )
                 self.view.render_panel(
@@ -73,7 +77,10 @@ class GameController:
                     elif event.type == pygame.KEYDOWN:
                         try:
                             pressed_key = DIRECTION_MAP[event.key]
+                            curr_level = self.level_model.current_level
                             self.player.move_direction(pressed_key)
+                            if curr_level != self.level_model.current_level:
+                                self.monster_tracker.generate_monsters(self.level_model)
                         except KeyError as x:
                             # This block runs if the key is missing
                             self.view.show_log(f"Key not mapped to movement: {str(x)}")

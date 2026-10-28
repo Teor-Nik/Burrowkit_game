@@ -4,7 +4,7 @@ from enum import Enum
 
 import pygame
 
-from dungeon.model.entities import EntityType
+from dungeon.model.entities import EntityType, EntitySubType
 from dungeon.model.level import Tile
 
 
@@ -44,6 +44,14 @@ COLOUR_ENTITIES: dict[EntityType, RGB] = {
     EntityType.PLAYER: (144, 156, 209),  # Blue Player
     EntityType.MONSTER: (179, 20, 20),  # Red monster
     EntityType.KIT: (209, 165, 144),  # Kit brown (fawn)
+}
+
+COLOUR_MONSTERS: dict[EntitySubType, RGB] = {
+    EntitySubType.BAT: (131, 129, 133),  # Blue Player
+    EntitySubType.OOZE: (98, 219, 222),  # Red monster
+    EntitySubType.GOBLIN: (222, 125, 98),  # Kit brown (fawn)
+    EntitySubType.GOBLIN_BRUTE: (214, 109, 109),  # Kit brown (fawn)
+    EntitySubType.GOBLIN_KING: (184, 39, 39),  # Kit brown (fawn)
 }
 
 
@@ -150,11 +158,15 @@ class GameRenderer:
             text_surface, (coords[0] + 10, coords[1] + 40, PANEL_WIDTH, PANEL_HEIGHT)
         )
 
-    def draw_entity(self, type: EntityType, coords: tuple[int, int]) -> None:
+    def draw_entity(self, type: EntityType, subtype: EntitySubType | None, coords: tuple[int, int]) -> None:
         """Draw the player on the level."""
         row_num = coords[0] * BLOCK_SMALL
         col_num = coords[1] * BLOCK_SMALL
-        colour = COLOUR_ENTITIES[type]
+        if subtype is not None:
+            colour = COLOUR_MONSTERS[subtype]
+        else:
+            colour = COLOUR_ENTITIES[type]
+
         half_diff = (BLOCK_SMALL - OBJECT_SMALL) / 2
         self.render_map_cell(
             colour,
