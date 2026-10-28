@@ -133,6 +133,13 @@ def custom_player_premax(custom_premax_level_game) -> entities.Player:
     return player
 
 
+@pytest.fixture
+def pos() -> list[tuple[int, int]]:
+    """Load the game for the invalid map."""
+    pos: list[tuple[int, int]] = [(0, 0)]
+    return pos
+
+
 @pytest.mark.parametrize(
     "movement",
     [
@@ -142,9 +149,9 @@ def custom_player_premax(custom_premax_level_game) -> entities.Player:
         entities.Direction.RIGHT,
     ],
 )
-def test_basic_movement(custom_player, movement: int) -> None:
+def test_basic_movement(custom_player, movement: int, pos) -> None:
     """Test that all basic movement is a valid move on map with space."""
-    valid = custom_player.move_direction(movement)
+    valid = custom_player.move_direction(movement, pos)
     assert valid
 
 
@@ -157,60 +164,60 @@ def test_basic_movement(custom_player, movement: int) -> None:
         entities.Direction.RIGHT,
     ],
 )
-def test_movement_into_wall(custom_player_map5, movement: int) -> None:
+def test_movement_into_wall(custom_player_map5, movement: int, pos) -> None:
     """Test that all movement into a wall is invalid."""
-    valid = custom_player_map5.move_direction(movement)
+    valid = custom_player_map5.move_direction(movement, pos)
     assert not valid
 
 
-def test_level_up(custom_player, custom_map_game) -> None:
+def test_level_up(custom_player, custom_map_game, pos) -> None:
     """Test moving the playing into Stairs levels up the game."""
     curr_level_check = custom_map_game.current_level
     for _ in range(1, 3):
-        custom_player.move_direction(entities.Direction.LEFT)
+        custom_player.move_direction(entities.Direction.LEFT, pos)
 
     tile = custom_map_game.tile_at(custom_player.position[0], custom_player.position[1])
     new_level = custom_map_game.current_level - 1
     assert new_level == curr_level_check and tile == Tile.ENTRANCE
 
 
-def test_goal_reached(custom_goalplayer, custom_goalmap_game) -> None:
+def test_goal_reached(custom_goalplayer, custom_goalmap_game, pos) -> None:
     """Test that moving the player into the Goal finishes the game."""
     for _ in range(1, 12):
-        custom_goalplayer.move_direction(entities.Direction.LEFT)
+        custom_goalplayer.move_direction(entities.Direction.LEFT, pos)
     result = custom_goalmap_game.game_finished
     assert result
 
 
-def test_entrance_first_level(custom_player, custom_map_game) -> None:
+def test_entrance_first_level(custom_player, custom_map_game, pos) -> None:
     """Test that the first level entrance holds no functionality."""
     curr_level_check = custom_map_game.current_level
     moved = False
     while not moved:
-        moved = custom_player.move_direction(entities.Direction.LEFT)
-        moved = custom_player.move_direction(entities.Direction.RIGHT)
-        moved = custom_player.move_direction(entities.Direction.UP)
-        moved = custom_player.move_direction(entities.Direction.DOWN)
+        moved = custom_player.move_direction(entities.Direction.LEFT, pos)
+        moved = custom_player.move_direction(entities.Direction.RIGHT, pos)
+        moved = custom_player.move_direction(entities.Direction.UP, pos)
+        moved = custom_player.move_direction(entities.Direction.DOWN, pos)
 
     while custom_player.position != custom_map_game.start_position:
         if custom_player.position[0] > custom_map_game.start_position[0]:
-            custom_player.move_direction(entities.Direction.UP)
+            custom_player.move_direction(entities.Direction.UP, pos)
         if custom_player.position[0] < custom_map_game.start_position[0]:
-            custom_player.move_direction(entities.Direction.DOWN)
+            custom_player.move_direction(entities.Direction.DOWN, pos)
         if custom_player.position[1] > custom_map_game.start_position[1]:
-            custom_player.move_direction(entities.Direction.LEFT)
+            custom_player.move_direction(entities.Direction.LEFT, pos)
         if custom_player.position[1] < custom_map_game.start_position[1]:
-            custom_player.move_direction(entities.Direction.RIGHT)
+            custom_player.move_direction(entities.Direction.RIGHT, pos)
     tile = custom_map_game.tile_at(custom_player.position[0], custom_player.position[1])
     new_level = custom_map_game.current_level
     assert new_level == curr_level_check and tile == Tile.ENTRANCE
 
 
-def test_all_levels_usable(custom_player_premax, custom_premax_level_game) -> None:
+def test_all_levels_usable(custom_player_premax, custom_premax_level_game, pos) -> None:
     """Test that each level can be traversed."""
     curr_level = custom_premax_level_game.current_level
     for _ in range(1, 3):
-        custom_player_premax.move_direction(entities.Direction.LEFT)
+        custom_player_premax.move_direction(entities.Direction.LEFT, pos)
     assert custom_premax_level_game.current_level > curr_level
 
 
@@ -223,8 +230,8 @@ def test_all_levels_usable(custom_player_premax, custom_premax_level_game) -> No
         entities.Direction.RIGHT,
     ],
 )
-def test_emptysides_reached(custom_nosidesplayer, movement: int) -> None:
+def test_emptysides_reached(custom_nosidesplayer, movement: int, pos) -> None:
     """Test that moving the player into the Goal finishes the game."""
     with pytest.raises(ValueError, match="Error: Map out of bounds error occurred."):
         for _ in range(1, 6):
-            custom_nosidesplayer.move_direction(movement)
+            custom_nosidesplayer.move_direction(movement, pos)

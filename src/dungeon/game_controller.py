@@ -78,7 +78,8 @@ class GameController:
                         try:
                             pressed_key = DIRECTION_MAP[event.key]
                             curr_level = self.level_model.current_level
-                            self.player.move_direction(pressed_key)
+                            taken = self.monster_tracker.list_taken_positions()
+                            self.player.move_direction(pressed_key, taken)
                             if curr_level != self.level_model.current_level:
                                 self.monster_tracker.generate_monsters(self.level_model)
                         except KeyError as x:

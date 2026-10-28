@@ -60,11 +60,16 @@ class Player(Entity):
         self.turn = 1
         self.creature = EntityType.PLAYER
 
-    def move_direction(self, movement: Direction) -> bool:
+    def move_direction(
+        self, movement: Direction, taken_pos: list[tuple[int, int]]
+    ) -> bool:
         """Move player to grid coordinates."""
         new_row = self.position[0] - movement.value[0]
         new_col = self.position[1] - movement.value[1]
-        if self.game.validate_update(new_row, new_col):
+        if (
+            self.game.validate_update(new_row, new_col)
+            and (new_row, new_col) not in taken_pos
+        ):
             self.position = self.game.game_progress(new_row, new_col)
             self.turn += 1
             self.player_turn = False
@@ -84,7 +89,9 @@ class Monster(Entity):
         self.monster_type = monster_type
         self.visible = False
 
-    def check_position(self, curr_filled: list[tuple[int, int]], pos: tuple[int, int]) -> bool:
+    def check_position(
+        self, curr_filled: list[tuple[int, int]], pos: tuple[int, int]
+    ) -> bool:
         """Check if the position is already occupied."""
         taken = False
         if pos in curr_filled:
@@ -104,9 +111,7 @@ class Monster(Entity):
         return valid_path
 
     def bfs_pathfinder(
-            self,
-            player_pos: tuple[int, int],
-            curr_filled: list[tuple[int, int]]
+        self, player_pos: tuple[int, int]
     ) -> list[tuple[int, int]] | None:
         """Find the best path towards the players curernt position."""
         start = self.position
@@ -117,7 +122,7 @@ class Monster(Entity):
             qrow, qcol = current_pos
             if current_pos == player_pos:
                 path = []
-                curr = current_pos
+                curr: tuple[int, int] | None = current_pos
                 while curr is not None:
                     curr = parent[curr]
                     if curr is not None:
@@ -128,9 +133,9 @@ class Monster(Entity):
                 setrow = qrow + direction[1].value[0]
                 setcol = qcol + direction[1].value[1]
                 neighbor_pos = (setrow, setcol)
-                if (self.game.validate_nonplayer_update(setrow, setcol)
+                if (
+                    self.game.validate_nonplayer_update(setrow, setcol)
                     and neighbor_pos not in parent
-                    # and not self.check_position(curr_filled, neighbor_pos)
                 ):
                     parent[neighbor_pos] = current_pos
                     queue.append(neighbor_pos)
@@ -149,17 +154,24 @@ class EntityModel:
         """Store all of the entities in the current level."""
         self.entities_list.append(entity)
 
+    def list_taken_positions(self) -> list[tuple[int, int]]:
+        """Provide a list of every filled position by a Monster."""
+        filled_positions: list[tuple[int, int]] = []
+        for mon in self.entities_list:
+            filled_positions.append(mon.position)
+        return filled_positions
+
     def generate_monsters(self, game: GameLevel) -> None:
         """Generate the monsters needed for that level."""
-        self.entities_list: list[Monster] = []
+        self.entities_list.clear()
         # Only include all monsters for the MAX level of the game
         if game.current_level == game.max_level:
-             types = [monsters for monsters in EntitySubType]
+            types = [monsters for monsters in EntitySubType]
         else:
             types = [
-                monsters for monsters in EntitySubType if monsters.name not in (
-                    "GOBLIN_KING"
-                )
+                monsters
+                for monsters in EntitySubType
+                if monsters.name not in ("GOBLIN_KING")
             ]
         # Create decreasing weights based on position
         weights = list(range(len(types), 0, -1))
@@ -172,22 +184,20 @@ class EntityModel:
     def move_monsters(self, player_pos: tuple[int, int]) -> None:
         """Move all monsters to new valid grid coordinates."""
         for monster in self.entities_list:
-            filled_positions = []
-            for mon in self.entities_list:
-                filled_positions.append(mon.position)
+            filled_positions = self.list_taken_positions()
             valid_movement = False
             bfs = False
             if monster.check_player_distance(player_pos):
                 monster.visible = True
                 bfs = True
             if bfs:
-                path = monster.bfs_pathfinder(player_pos, filled_positions)
+                path = monster.bfs_pathfinder(player_pos)
                 next_pos = monster.position
                 if path is not None:
                     result = path[-2:-1]
                     check_next_pos = result[0] if result else None
                     if (
-                        isinstance(check_next_pos,(tuple))
+                        isinstance(check_next_pos, (tuple))
                         and check_next_pos != monster.position
                         and check_next_pos != player_pos
                         and check_next_pos not in filled_positions
@@ -202,11 +212,15 @@ class EntityModel:
                         if movement == direction[1].value[2]:
                             new_row = monster.position[0] - direction[1].value[0]
                             new_col = monster.position[1] - direction[1].value[1]
-                            if (self.game.validate_nonplayer_update(new_row, new_col)
+                            if (
+                                self.game.validate_nonplayer_update(new_row, new_col)
                                 and (new_row, new_col) not in filled_positions
                             ):
                                 monster.position = (new_row, new_col)
                                 valid_movement = True
+                    if not valid_movement:
+                        # give the whileloop a way out if there are no feasible moves
+                        break
 
     def monster_stats(self) -> str:
         """Generate a list of the monster stats."""
