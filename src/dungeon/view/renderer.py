@@ -47,7 +47,7 @@ COLOUR_ENTITIES: dict[EntityType, RGB] = {
 }
 
 COLOUR_MONSTERS: dict[EntitySubType, RGB] = {
-    EntitySubType.BAT: (131, 129, 133),  # Blue Player
+    EntitySubType.RAT: (131, 129, 133),  # Blue Player
     EntitySubType.OOZE: (98, 219, 222),  # Red monster
     EntitySubType.GOBLIN: (222, 125, 98),  # Kit brown (fawn)
     EntitySubType.GOBLIN_BRUTE: (214, 109, 109),  # Kit brown (fawn)

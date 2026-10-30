@@ -18,11 +18,11 @@ class EntityType(Enum):
 class EntitySubType(Enum):
     """List of types of monsters and their points."""
 
-    BAT = ("Bat", 1)
-    OOZE = ("Ooze", 2)
-    GOBLIN = ("Goblin", 4)
-    GOBLIN_BRUTE = ("Goblin Brute", 10)
-    GOBLIN_KING = ("Goblin King", 20)
+    RAT = ("Rat", 3)
+    OOZE = ("Ooze", 5)
+    GOBLIN = ("Goblin", 8)
+    GOBLIN_BRUTE = ("Goblin Brute", 12)
+    GOBLIN_KING = ("Goblin King", 25)
 
 
 class Direction(Enum):
@@ -35,10 +35,23 @@ class Direction(Enum):
 
 
 DIFFICULTY_EXP: dict[Difficulty, int] = {
-    Difficulty.EASY: 5,
-    Difficulty.MEDIUM: 10,
-    Difficulty.HARD: 13,
+    Difficulty.EASY: 8,
+    Difficulty.MEDIUM: 15,
+    Difficulty.HARD: 20,
 }
+
+EXP_MULTIPLIER: int = 100
+HEALTH_MULTIPLIER: int = 10
+
+
+class PlayerAttack(Enum):
+    """Player attack options, damage, hit rate and level required."""
+
+    PUNCH = ("Punch", 2, 0.80, 1)
+    STAB = ("Stab", 3, 0.75, 2)
+    SLASH = ("Slash", 4, 0.70, 3)
+    IRON_JAB = ("Iron Jab", 7, 0.60, 4)
+    BLADE_RUSH = ("Phantom Blade Rush", 10, 0.50, 5)
 
 
 class Entity:
@@ -59,6 +72,10 @@ class Player(Entity):
         super().__init__(game, position)
         self.turn = 1
         self.creature = EntityType.PLAYER
+        self.experience = 0
+        self.level = 1
+        self.hp = self.level * HEALTH_MULTIPLIER
+        self.damage = 0
 
     def move_direction(
         self, movement: Direction, taken_pos: list[tuple[int, int]]
@@ -76,6 +93,64 @@ class Player(Entity):
             return True
         return False
 
+    def check_monster_distance(self, monster_pos: tuple[int, int]) -> bool:
+        """Check the distance to the player, if close return True."""
+        row = monster_pos[0] - self.position[0]
+        col = monster_pos[1] - self.position[1]
+
+        dist = (2, -2)  # number of tiles away to match against (any direction)
+        match_position = False
+        # if within N tiles of the player in any direction return true
+        if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
+            match_position = True
+        print (match_position)
+        return match_position
+
+    def increase_exp(self, monster: EntitySubType) -> None:
+        """Increase the player EXP based on level and monster killed."""
+        self.experience += self.game.difficulty.value[0] * monster.value[1]
+        self.determine_levle()
+
+    def determine_levle(self) -> None:
+        """Determine the player Level and reset experieince on level up."""
+        if self.experience >= self.level * EXP_MULTIPLIER:
+            self.level += 1
+            self.hp = self.level * HEALTH_MULTIPLIER
+            self.experience = 0
+
+    def player_stats(self) -> str:
+        """Generate a list of the monster stats."""
+        required_exp = self.level * EXP_MULTIPLIER
+        current_damage = self.hp - self.damage
+        attackmoves: str = ""
+        for move in PlayerAttack:
+            if self.level >= move.value[3]:
+                attackmoves += f" - {move.value[0]} ({move.value[1]})\n"
+        stats: str = (
+            f"\nLevel:{self.level}: Exp: {self.experience}/{required_exp}.\n"
+            f"Health:  {current_damage} / {self.hp}\n"
+            f"Attack Move (damage):\n{attackmoves}"
+        )
+        return stats
+
+    def attack_monster(self, attack_key: PlayerAttack, monsters: list["Monster"]) -> None:
+        """Attack the nearest adjacent Monster."""
+        print("Attack!")
+        attack_made = False
+        for move in PlayerAttack:
+            if self.level >= move.value[3]:
+                monsters.sort(key=lambda obj: obj.hit_points)
+                for mon in monsters:
+                    if not attack_made:
+                        if self.check_monster_distance(mon.position):
+                            print(mon.monster_type.value[0], mon.hit_points)
+                            mon.hit_points -= attack_key.value[1]
+                            print("New HP: ", mon.hit_points)
+                            attack_made = True
+                            if mon.hit_points <= 0:
+                                self.increase_exp(mon.monster_type)
+                                print("Monster killed!!")
+
 
 class Monster(Entity):
     """Class representing a monster in the dungeon game."""
@@ -88,6 +163,7 @@ class Monster(Entity):
         self.creature = EntityType.MONSTER
         self.monster_type = monster_type
         self.visible = False
+        self.hit_points = self.monster_type.value[1]
 
     def check_position(
         self, curr_filled: list[tuple[int, int]], pos: tuple[int, int]
@@ -226,5 +302,16 @@ class EntityModel:
         """Generate a list of the monster stats."""
         stats: str = ""
         for mon in self.entities_list:
-            stats = stats + f"\n{mon.monster_type.value[0]}: {mon.position}"
+            if mon.visible:
+                name = mon.monster_type.value[0]
+                hp = mon.monster_type.value[1]
+                hp_remaining = mon.hit_points
+                stats = stats + (f"\n{name}: HP: {hp_remaining} / {hp}\n"
+                                f"     - Current Position: {mon.position}")
         return stats
+
+    def check_monsters_health(self) -> None:
+        """Ensure all monsters health is still valid."""
+        for mon in self.entities_list:
+            if mon.hit_points <= 0:
+                self.entities_list.remove(mon)

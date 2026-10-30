@@ -17,6 +17,19 @@ DIRECTION_MAP: dict[int, entities.Direction] = {
 }
 
 
+ATTACK_MAP: dict[int, entities.PlayerAttack] = {
+   pygame.K_1: entities.PlayerAttack.PUNCH,
+   pygame.K_KP1: entities.PlayerAttack.PUNCH,
+   pygame.K_2: entities.PlayerAttack.STAB,
+   pygame.K_KP2: entities.PlayerAttack.STAB,
+   pygame.K_3: entities.PlayerAttack.SLASH,
+   pygame.K_KP3: entities.PlayerAttack.SLASH,
+   pygame.K_4: entities.PlayerAttack.IRON_JAB,
+   pygame.K_KP4: entities.PlayerAttack.IRON_JAB,
+   pygame.K_5: entities.PlayerAttack.BLADE_RUSH,
+   pygame.K_KP5: entities.PlayerAttack.BLADE_RUSH,
+}
+
 class GameController:
     """Class responsible for controlling the game flow."""
 
@@ -41,8 +54,6 @@ class GameController:
                 self.view.draw_entity(self.player.creature, None, self.player.position)
                 if not self.player.player_turn:
                     self.monster_tracker.move_monsters(self.player.position)
-                    # for entity in enumerate(self.monster_tracker.entities_list):
-                    #     entity[1].move_mon_direction(self.monster_tracker.entities_list, self.player.position)
                 for mon in self.monster_tracker.entities_list:
                     if mon.visible:
                         self.view.draw_entity(
@@ -52,6 +63,7 @@ class GameController:
                 player_stats_text = (
                     "Player details will go here for stats.\n"
                     f"Player turn counter: {self.player.turn}. "
+                    f"{self.player.player_stats()}"
                 )
                 self.view.render_panel(
                     self.view.panel.PLAYER_STATS, "Player", player_stats_text
@@ -63,8 +75,8 @@ class GameController:
                 )
                 game_progress_test = (
                     f"Game progress so far - Level: {self.level_model.current_level}.\n"
-                    f"Difficulty Rating: {self.level_model.difficulty}\n"
-                    f"Monster Positions: {self.monster_tracker.monster_stats()}"
+                    f"Difficulty Rating: {self.level_model.difficulty.value[1]}\n"
+                    f"Monster(s): {self.monster_tracker.monster_stats()}"
                 )
                 self.view.render_panel(
                     self.view.panel.PROGRESS, "Game Progress", game_progress_test
@@ -85,6 +97,14 @@ class GameController:
                         except KeyError as x:
                             # This block runs if the key is missing
                             self.view.show_log(f"Key not mapped to movement: {str(x)}")
+                        try:
+                            attack_key = ATTACK_MAP[event.key]
+                            taken = self.monster_tracker.list_taken_positions()
+                            self.player.attack_monster(attack_key, self.monster_tracker.entities_list)
+                            self.monster_tracker.check_monsters_health()
+                        except KeyError as x:
+                            # This block runs if the key is missing
+                            self.view.show_log(f"Attack Key not mapped to movement: {str(x)}")
         except ValueError as e:
             self.view.show_error(str(e))
         # Quit Pygame
