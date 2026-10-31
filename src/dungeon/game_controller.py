@@ -53,7 +53,8 @@ class GameController:
                 self.view.draw_level(self.level_model.level)
                 self.view.draw_entity(self.player.creature, None, self.player.position)
                 if not self.player.player_turn:
-                    self.monster_tracker.move_monsters(self.player.position)
+                    self.monster_tracker.move_monsters(self.player)
+                    self.monster_tracker.monsters_attack(self.player)
                 for mon in self.monster_tracker.entities_list:
                     if mon.visible:
                         self.view.draw_entity(
@@ -61,8 +62,6 @@ class GameController:
                         )
                 self.player.player_turn = True
                 player_stats_text = (
-                    "Player details will go here for stats.\n"
-                    f"Player turn counter: {self.player.turn}. "
                     f"{self.player.player_stats()}"
                 )
                 self.view.render_panel(
@@ -74,9 +73,9 @@ class GameController:
                     "Kit details will go here for stats.",
                 )
                 game_progress_test = (
-                    f"Game progress so far - Level: {self.level_model.current_level}.\n"
-                    f"Difficulty Rating: {self.level_model.difficulty.value[1]}\n"
-                    f"Monster(s): {self.monster_tracker.monster_stats()}"
+                    f"\nGame Level:   {self.level_model.current_level}\n"
+                    f"Level Difficulty Rating:   {self.level_model.difficulty.value[1]}"
+                    f"\n\nMonster(s):{self.monster_tracker.monster_stats()}"
                 )
                 self.view.render_panel(
                     self.view.panel.PROGRESS, "Game Progress", game_progress_test
