@@ -113,6 +113,13 @@ class Difficulty(Enum):
     HARD = (2, "Hard")
 
 
+DIFFICULTY_EXP: dict[Difficulty, int] = {
+    Difficulty.EASY: 8,
+    Difficulty.MEDIUM: 15,
+    Difficulty.HARD: 20,
+}
+
+
 class GameLevel:
     """Class representing a level in the dungeon game."""
 
