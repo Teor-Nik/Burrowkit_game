@@ -22,7 +22,7 @@ class EntityAttack(Enum):
     """Attack options, damage, hit rate and level required."""
 
     PUNCH = ("Punch", 2, 0.80, 1)
-    SLUDGE = ("Sludge", 2, 0.80, 1)
+    SLUDGE = ("Sludge", 1, 0.80, 1)
     BITE = ("Bite", 1, 0.60, 1)
     CLUB_BASH = ("Club Bash", 2, 0.80, 1)
     BODYSLAM = ("BodySlam", 2, 0.80, 1)
@@ -31,20 +31,20 @@ class EntityAttack(Enum):
     IRON_JAB = ("Iron Jab", 7, 0.60, 4)
     BLADE_RUSH = ("Phantom Blade Rush", 10, 0.50, 5)
 
-Attack_Allowed: dict[EntityAttack, EntityType] = {
-    EntityAttack.PUNCH: EntityType.PLAYER,
-    EntityAttack.STAB: EntityType.PLAYER,
-    EntityAttack.SLASH: EntityType.PLAYER,
-    EntityAttack.IRON_JAB: EntityType.PLAYER,
-    EntityAttack.BLADE_RUSH: EntityType.PLAYER,
-    EntityAttack.SLUDGE: EntityType.OOZE,
-    EntityAttack.BITE: EntityType.RAT,
-    EntityAttack.PUNCH: EntityType.GOBLIN,
-    EntityAttack.PUNCH: EntityType.GOBLIN_BRUTE,
-    EntityAttack.CLUB_BASH: EntityType.GOBLIN_BRUTE,
-    EntityAttack.CLUB_BASH: EntityType.GOBLIN_KING,
-    EntityAttack.BODYSLAM: EntityType.GOBLIN_KING,
-}
+ALLOWED_ATTACKS = [
+    (EntityAttack.PUNCH, EntityType.PLAYER),
+    (EntityAttack.STAB, EntityType.PLAYER),
+    (EntityAttack.SLASH, EntityType.PLAYER),
+    (EntityAttack.IRON_JAB, EntityType.PLAYER),
+    (EntityAttack.BLADE_RUSH, EntityType.PLAYER),
+    (EntityAttack.SLUDGE, EntityType.OOZE),
+    (EntityAttack.BITE, EntityType.RAT),
+    (EntityAttack.PUNCH, EntityType.GOBLIN),
+    (EntityAttack.PUNCH, EntityType.GOBLIN_BRUTE),
+    (EntityAttack.CLUB_BASH, EntityType.GOBLIN_BRUTE),
+    (EntityAttack.CLUB_BASH, EntityType.GOBLIN_KING),
+    (EntityAttack.BODYSLAM, EntityType.GOBLIN_KING)
+]
 
 class Direction(Enum):
     """List of possible movement directions."""
@@ -63,6 +63,7 @@ class Entity:
         """Initialise an Entity."""
         self.game = game
         self.position = position
+        self.creature = None
         self.level = 1  # Entity current level, starts at 1
         self.hp = self.level * HEALTH_MULTIPLIER
         self.experience = 0  # Entity current experience, starts at 0
@@ -84,6 +85,16 @@ class Entity:
             self.turn += 1
             return True
         return False
+
+    def attack_moves(self) -> list[EntityAttack] | None:
+        """Return a list of valid attack moves."""
+        filtered_move = [
+            attack[1][0] for attack in enumerate(ALLOWED_ATTACKS)
+            if (attack[1][1] == self.creature
+                and attack[1][0].value[3] <= self.level
+            )
+        ]
+        return filtered_move
 
     def check_distance(self, position: tuple[int, int]) -> bool:
         """Check the distance to the a position, if close return True."""

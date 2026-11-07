@@ -1,6 +1,12 @@
 """Entities of a Player Sub-Class."""
 
-from dungeon.model.entities import HEALTH_MULTIPLIER, Entity, EntityAttack, EntityType
+from dungeon.model.entities import (
+    ALLOWED_ATTACKS,
+    HEALTH_MULTIPLIER,
+    Entity,
+    EntityAttack,
+    EntityType,
+)
 from dungeon.model.entities_monster import Monster
 from dungeon.model.level import GameLevel
 
@@ -33,9 +39,13 @@ class Player(Entity):
         required_exp = self.level * EXP_MULTIPLIER
         current_damage = self.hp - self.damage
         attackmoves: str = ""
-        for move in EntityAttack:
-            if self.level >= move.value[3]:
-                attackmoves += f"    - {move.value[0]}  ({move.value[1]})\n"
+        filtered_list = self.attack_moves()
+        if filtered_list is not None:
+            for attack in filtered_list:
+                attackmoves += (
+                    f"    - {attack.value[0]}  "
+                    f"({attack.value[1]})\n"
+                )
         stats: str = (
             f"\nLevel:   {self.level}\n"
             f"\n    Exp:   {self.experience} / {required_exp}.\n"
@@ -50,8 +60,10 @@ class Player(Entity):
         """Attack the nearest adjacent Monster."""
         print("Attack!")
         attack_made = False
-        for move in EntityAttack:
-            if self.level >= move.value[3]:
+        filtered_list = self.attack_moves()
+        if filtered_list is not None:
+            for move in filtered_list:
+                print(move.value[0], move.value[3] , self.level)
                 monsters.sort(key=lambda obj: obj.hp)
                 for mon in monsters:
                     if not attack_made:

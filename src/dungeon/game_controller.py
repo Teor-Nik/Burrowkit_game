@@ -1,8 +1,15 @@
 """Burrowkit Game: Dungeon Controller."""
 
+
 import pygame
 
-from dungeon.model import entities, entities_kit, entities_monster, entities_player, level
+from dungeon.model import (
+    entities,
+    entities_kit,
+    entities_monster,
+    entities_player,
+    level,
+)
 from dungeon.view import renderer
 
 DIRECTION_MAP: dict[int, entities.Direction] = {

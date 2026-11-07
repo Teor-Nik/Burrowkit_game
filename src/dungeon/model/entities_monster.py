@@ -12,9 +12,9 @@ from dungeon.model.level import GameLevel
 
 
 class EntitySubType(Enum):
-    """List of types of monsters and their points, damage and hit rate."""
+    """List of types of monsters and their points, hp and hit rate."""
 
-    RAT = ("Rat", 2, 1, 0.50)
+    RAT = ("Rat", 2, 2, 0.50)
     OOZE = ("Ooze", 3, 2, 0.45)
     GOBLIN = ("Goblin", 5, 2, 0.45)
     GOBLIN_BRUTE = ("Goblin Brute", 7, 3, 0.40)
@@ -43,8 +43,9 @@ class Monster(Entity):
         self.creature = mon_type
         self.monster_type = SubType[self.creature]
         self.hp = self.monster_type.value[1]
-        self.visible = True
+        self.visible = False
         self.move_processed = False
+        self.most_recent_move = None
 
     def monster_level_types(self, game: GameLevel) -> EntityType:
         """Generate a monster needed for this level."""
@@ -75,24 +76,38 @@ class Monster(Entity):
     def attack_player(self, player_pos: tuple[int, int]) -> int:
         """Attack the player while on turn."""
         if self.check_player_distance(player_pos, 2, self.position):
-            percentage_chance = self.monster_type.value[3]
-            rand = random.random()
-            if rand < percentage_chance: # and player.turn > 5:
-                # player.damage += self.monster_type.value[2]
-                # print(player.damage)
-                print (rand, percentage_chance)
-                return self.monster_type.value[2]
+            filtered_move = self.attack_moves()
+            if filtered_move is not None:
+                move = random.choice(filtered_move)
+                self.most_recent_move = f"{move.value[0]}"
+                percentage_chance = self.monster_type.value[3]
+                rand = random.random()
+                if rand < percentage_chance:
+                    self.most_recent_move += f", {move.value[1]} damage."
+                    return move.value[1]
+                else:
+                    self.most_recent_move += ", missed!"
         return 0
 
     def monster_stats(self) -> str:
         """Generate a the monster stats."""
         stats: str = ""
+        # Get raw values ready to format
         name = self.monster_type.value[0]
         hp = self.monster_type.value[1]
         hp_remaining = self.hp
+        # format raw values
+        name_and_id = f"  {name} (#{self.id_refererence})"
+        hp_stats = f"HP: ({hp_remaining} / {hp})"
+        recent_move: str = ""
+        if self.move_processed:
+            recent_move = "\n     *********************"
+        else:
+            recent_move = f"\n     Move: {self.most_recent_move}"
         stats = stats + (
-            f"\n    ID:  {self.id_refererence}    {name}\n"
-            f"        - HP: {hp_remaining} / {hp}\n"
+            f"\n{name_and_id:<30}"
+            f"{hp_stats:<20}"
+            f"{recent_move}"
         )
         return stats
 
