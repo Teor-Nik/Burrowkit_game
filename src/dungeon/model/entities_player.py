@@ -56,7 +56,7 @@ class Player(Entity):
                 for mon in monsters:
                     if not attack_made:
                         if self.check_distance(mon.position):
-                            print(mon.monster_type.value[0], mon.hp)
+                            # print(mon.monster_type.value[0], mon.hp)
                             mon.hp -= attack_key.value[1]
                             attack_made = True
                             if mon.hp <= 0:

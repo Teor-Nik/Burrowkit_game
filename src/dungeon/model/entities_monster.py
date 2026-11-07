@@ -1,7 +1,6 @@
 """Entities of a Monster Sub-Class."""
 
 import random
-from collections import deque
 from enum import Enum
 
 from dungeon.model.entities import (
@@ -73,55 +72,9 @@ class Monster(Entity):
             taken = True
         return taken
 
-    def check_player_distance(
-            self, player_pos: tuple[int, int], distance_check: int
-    ) -> bool:
-        """Check the distance to the player, if close return True."""
-        row = player_pos[0] - self.position[0]
-        col = player_pos[1] - self.position[1]
-        max_dist = distance_check
-        # number of tiles away to match against (any direction)
-        dist = (max_dist, -max_dist)
-        valid_path = False
-        # if within N tiles of the player in any direction return true
-        if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
-            valid_path = True
-        return valid_path
-
-    def bfs_pathfinder(
-        self, player_pos: tuple[int, int]
-    ) -> list[tuple[int, int]] | None:
-        """Find the best path towards the players curernt position."""
-        start = self.position
-        queue = deque([start])
-        parent: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
-        while queue:
-            current_pos = queue.popleft()
-            qrow, qcol = current_pos
-            if current_pos == player_pos:
-                path = []
-                curr: tuple[int, int] | None = current_pos
-                while curr is not None:
-                    curr = parent[curr]
-                    if curr is not None:
-                        path.append(curr)
-                return path
-
-            for direction in enumerate(Direction):
-                setrow = qrow + direction[1].value[0]
-                setcol = qcol + direction[1].value[1]
-                neighbor_pos = (setrow, setcol)
-                if (
-                    self.game.validate_nonplayer_update(setrow, setcol)
-                    and neighbor_pos not in parent
-                ):
-                    parent[neighbor_pos] = current_pos
-                    queue.append(neighbor_pos)
-        return None
-
     def attack_player(self, player_pos: tuple[int, int]) -> int:
         """Attack the player while on turn."""
-        if self.check_player_distance(player_pos, 2):
+        if self.check_player_distance(player_pos, 2, self.position):
             percentage_chance = self.monster_type.value[3]
             rand = random.random()
             if rand < percentage_chance: # and player.turn > 5:
@@ -132,7 +85,7 @@ class Monster(Entity):
         return 0
 
     def monster_stats(self) -> str:
-        """Generate a list of the monster stats."""
+        """Generate a the monster stats."""
         stats: str = ""
         name = self.monster_type.value[0]
         hp = self.monster_type.value[1]
@@ -146,12 +99,12 @@ class Monster(Entity):
     def move_monster(
             self, player_pos: tuple[int, int], filled_positions: list[tuple[int, int]]
     ) -> None:
-        """Move all monsters to new valid grid coordinates."""
+        """Move monster to new valid grid coordinates."""
         self.move_processed = True
         valid_movement = False
         bfs = False
-        print (self.visible)
-        if self.check_player_distance(player_pos, PLAYER_CHASE_DISTANCE):
+        # print (self.visible)
+        if self.check_player_distance(player_pos, PLAYER_CHASE_DISTANCE, self.position):
             self.visible = True
             bfs = True
         if bfs:

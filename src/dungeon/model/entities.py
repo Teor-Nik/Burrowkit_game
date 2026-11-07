@@ -1,5 +1,6 @@
 """Burrowkit Game Dungeon entities."""
 
+from collections import deque
 from enum import Enum
 
 from dungeon.model.level import GameLevel
@@ -100,3 +101,95 @@ class Entity:
         """Set the monsters ID reference."""
         self.id_refererence = num + 101
 
+    def bfs_move_away(
+            self, player_pos: tuple[int, int], max_distance: int = 3
+    ) -> tuple[int, int] | None:
+        """Find a move that goes away from the player, up to max_distance."""
+        start = player_pos
+        queue = deque([start])
+        distances: dict[tuple[int, int], int] = {start: 0}
+
+        # BFS from player to get distances
+        while queue:
+            current_pos = queue.popleft()
+            qrow, qcol = current_pos
+            for _, direction in enumerate(Direction):
+                setrow = qrow + direction.value[0]
+                setcol = qcol + direction.value[1]
+                neighbor_pos = (setrow, setcol)
+                if (
+                    self.game.validate_nonplayer_update(setrow, setcol)
+                    and neighbor_pos not in distances
+                ):
+                    distances[neighbor_pos] = distances[current_pos] + 1
+                    queue.append(neighbor_pos)
+
+        # Current distance from player
+        current_dist = distances.get(self.position, None)
+        if current_dist is None:
+            return None  # Can't reach current position from player
+
+        # Find a neighbor that increases distance but stays within max_distance
+        qrow, qcol = self.position
+        for _, direction in enumerate(Direction):
+            setrow = qrow + direction.value[0]
+            setcol = qcol + direction.value[1]
+            neighbor_pos = (setrow, setcol)
+            if self.game.validate_nonplayer_update(setrow, setcol):
+                neighbor_dist = distances.get(neighbor_pos, None)
+                if (neighbor_dist is not None
+                    and neighbor_dist > current_dist
+                    and neighbor_dist <= max_distance
+                ):
+                    return neighbor_pos  # First valid move away
+
+        return None  # No valid move away
+
+    def bfs_pathfinder(
+        self, player_pos: tuple[int, int]
+    ) -> list[tuple[int, int]] | None:
+        """Find the best path towards the players curernt position."""
+        start = self.position
+        queue = deque([start])
+        parent: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
+        while queue:
+            current_pos = queue.popleft()
+            qrow, qcol = current_pos
+            if current_pos == player_pos:
+                path = []
+                curr: tuple[int, int] | None = current_pos
+                while curr is not None:
+                    curr = parent[curr]
+                    if curr is not None:
+                        path.append(curr)
+                return path
+
+            for direction in enumerate(Direction):
+                setrow = qrow + direction[1].value[0]
+                setcol = qcol + direction[1].value[1]
+                neighbor_pos = (setrow, setcol)
+                if (
+                    self.game.validate_nonplayer_update(setrow, setcol)
+                    and neighbor_pos not in parent
+                ):
+                    parent[neighbor_pos] = current_pos
+                    queue.append(neighbor_pos)
+        return None
+
+    def check_player_distance(
+            self,
+            player_pos: tuple[int, int],
+            distance_check: int,
+            current_pos: tuple[int, int],
+    ) -> bool:
+        """Check the distance to the player, if close return True."""
+        row = player_pos[0] - current_pos[0]
+        col = player_pos[1] - current_pos[1]
+        max_dist = distance_check
+        # number of tiles away to match against (any direction)
+        dist = (max_dist, -max_dist)
+        valid_path = False
+        # if within N tiles of the player in any direction return true
+        if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
+            valid_path = True
+        return valid_path
