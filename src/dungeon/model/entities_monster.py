@@ -14,11 +14,11 @@ from dungeon.model.level import GameLevel
 class EntitySubType(Enum):
     """List of types of monsters and their points, hp and hit rate."""
 
-    RAT = ("Rat", 2, 2, 0.50)
-    OOZE = ("Ooze", 3, 2, 0.45)
-    GOBLIN = ("Goblin", 5, 2, 0.45)
-    GOBLIN_BRUTE = ("Goblin Brute", 7, 3, 0.40)
-    GOBLIN_KING = ("Goblin King", 25, 8, 0.75)
+    RAT = ("Rat", 2, 10, 0.50)
+    OOZE = ("Ooze", 3, 20, 0.45)
+    GOBLIN = ("Goblin", 5, 25, 0.45)
+    GOBLIN_BRUTE = ("Goblin Brute", 7, 30, 0.40)
+    GOBLIN_KING = ("Goblin King", 25, 80, 0.75)
 
 SubType: dict[EntityType, EntitySubType] = {
     EntityType.OOZE: EntitySubType.OOZE,

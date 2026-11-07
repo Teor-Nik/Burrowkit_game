@@ -5,6 +5,7 @@ from enum import Enum
 import pygame
 
 from dungeon.model.entities import EntityType
+from dungeon.model.items import ItemTypes
 from dungeon.model.level import Tile
 
 
@@ -19,8 +20,9 @@ class Panel(Enum):
 
 WINDOW_BKGND_COLOUR = (144, 209, 197)  # Green map background 90D1C5
 PROGRESS_WINDOW_BKGND_COLOUR = (165, 144, 209)
-W_HEIGHT = 800  # larger to allow for buttons
-W_WIDTH = 800  # larger to allow for buttons
+W_HEIGHT = 1000  # larger to allow for buttons
+W_WIDTH = 1500  # larger to allow for buttons
+MAP_SIZE = 800
 # Calculate half dimensions
 HALF_WIDTH = W_WIDTH // 2
 HALF_HEIGHT = W_HEIGHT // 2
@@ -50,6 +52,15 @@ COLOUR_ENTITIES: dict[EntityType, RGB] = {
     EntityType.KIT: (209, 165, 144),  # Kit brown (fawn)
 }
 
+COLOUR_ITEMS: dict[ItemTypes, RGB] = {
+    ItemTypes.GREEN_BERRY: (40, 77, 26),  # dark yelloy/green
+    ItemTypes.YELLOW_BERRY: (77, 76, 26),  # dark yellow
+    ItemTypes.BREAD: (77, 63, 26),  # dark yellow/orange
+    ItemTypes.POITION: (26, 77, 57),  # dark green
+    ItemTypes.RED_BERRY: (77, 26, 26),  # dark red
+    ItemTypes.TRAP: (68, 26, 77),  # dark purple
+}
+
 
 class GameRenderer:
     """Class responsible for rendering the game window."""
@@ -72,8 +83,12 @@ class GameRenderer:
         self.screen.fill(WINDOW_BKGND_COLOUR)  # Clear screen
 
         # Top-left quadrant for MAP
-        pygame.draw.rect(self.screen, (30, 117, 82), (0, 0, HALF_WIDTH, HALF_HEIGHT))
-        self.map_section = self.screen.subsurface((0, 0, HALF_WIDTH, HALF_HEIGHT))
+        pygame.draw.rect(
+            self.screen,
+            (30, 117, 82),
+            (0, 0, MAP_SIZE // 2, MAP_SIZE // 2)
+        )
+        self.map_section = self.screen.subsurface((0, 0, MAP_SIZE // 2, MAP_SIZE // 2))
 
         # Top-right quadrant for Player section
         pygame.draw.rect(
@@ -168,6 +183,19 @@ class GameRenderer:
             round(row_num + half_diff),
             round(col_num + half_diff),
             OBJECT_SMALL,
+        )
+
+    def draw_item(self, type: ItemTypes, coords: tuple[int, int]) -> None:
+        """Draw the Items on the level."""
+        row_num = coords[0] * BLOCK_SMALL
+        col_num = coords[1] * BLOCK_SMALL
+        colour = COLOUR_ITEMS[type]
+        half_diff = (BLOCK_SMALL - OBJECT_SMALL) / 2
+        self.render_map_cell(
+                colour,
+                round(row_num + half_diff),
+                round(col_num + half_diff),
+                OBJECT_SMALL,
         )
 
     def render_map_cell(
