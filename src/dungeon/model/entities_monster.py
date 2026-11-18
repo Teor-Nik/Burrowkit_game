@@ -14,15 +14,29 @@ from dungeon.model.level import GameLevel
 class EntitySubType(Enum):
     """List of types of monsters and their points, hp and hit rate."""
 
-    RAT = ("Rat", 2, 10, 0.50)
-    OOZE = ("Ooze", 3, 20, 0.45)
-    GOBLIN = ("Goblin", 5, 25, 0.45)
-    GOBLIN_BRUTE = ("Goblin Brute", 7, 30, 0.40)
-    GOBLIN_KING = ("Goblin King", 25, 80, 0.75)
+    RATBLACK = ("Rat", 4, 10, 0.75)
+    RATBROWN = ("Rat", 4, 10, 0.50)
+    RATGREY = ("Rat", 4, 10, 0.65)
+    RATWHITE = ("Rat", 4, 10, 0.85)
+    SLIMEBLUE = ("Slime", 6, 20, 0.55)
+    SLIMEGREEN = ("Slime", 6, 20, 0.85)
+    SLIMEORANGE = ("Slime", 6, 20, 0.75)
+    SLIMEPINK = ("Slime", 6, 20, 0.55)
+    SLIMEPURPLE = ("Slime", 6, 20, 0.90)
+    GOBLIN = ("Goblin", 7, 25, 0.65)
+    GOBLIN_BRUTE = ("Goblin Brute", 10, 30, 0.75)
+    GOBLIN_KING = ("Goblin King", 25, 80, 0.95)
 
 SubType: dict[EntityType, EntitySubType] = {
-    EntityType.OOZE: EntitySubType.OOZE,
-    EntityType.RAT: EntitySubType.RAT,
+    EntityType.SLIMEBLUE: EntitySubType.SLIMEBLUE,
+    EntityType.SLIMEGREEN: EntitySubType.SLIMEGREEN,
+    EntityType.SLIMEORANGE: EntitySubType.SLIMEORANGE,
+    EntityType.SLIMEPINK: EntitySubType.SLIMEPINK,
+    EntityType.SLIMEPURPLE: EntitySubType.SLIMEPURPLE,
+    EntityType.RATBLACK: EntitySubType.RATBLACK,
+    EntityType.RATBROWN: EntitySubType.RATBROWN,
+    EntityType.RATGREY: EntitySubType.RATGREY,
+    EntityType.RATWHITE: EntitySubType.RATWHITE,
     EntityType.GOBLIN: EntitySubType.GOBLIN,
     EntityType.GOBLIN_BRUTE: EntitySubType.GOBLIN_BRUTE,
     EntityType.GOBLIN_KING: EntitySubType.GOBLIN_KING,
@@ -111,18 +125,21 @@ class Monster(Entity):
         )
         return stats
 
+    def determine_visibility(self, player_pos: tuple[int, int]) -> None:
+        """Determine if the monster should be visible or not."""
+        if self.check_player_distance(player_pos, PLAYER_CHASE_DISTANCE, self.position):
+            self.visible = True
+        else:
+            self.visible = False
+
     def move_monster(
             self, player_pos: tuple[int, int], filled_positions: list[tuple[int, int]]
     ) -> None:
         """Move monster to new valid grid coordinates."""
         self.move_processed = True
         valid_movement = False
-        bfs = False
-        # print (self.visible)
-        if self.check_player_distance(player_pos, PLAYER_CHASE_DISTANCE, self.position):
-            self.visible = True
-            bfs = True
-        if bfs:
+        self.determine_visibility(player_pos)
+        if self.visible:
             path = self.bfs_pathfinder(player_pos)
             next_pos = self.position
             if path is not None:
@@ -137,7 +154,7 @@ class Monster(Entity):
                     next_pos = check_next_pos
             self.position = (next_pos[0], next_pos[1])
             valid_movement = True
-        if not valid_movement or not bfs:
+        if not valid_movement or not self.visible:
             while not valid_movement:
                 movement = round(random.uniform(1, len(Direction)))
                 for direction in enumerate(Direction):

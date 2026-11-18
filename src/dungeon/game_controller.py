@@ -109,7 +109,7 @@ class GameController:
                 if self.current_turn == 3:
                     self.current_turn = 1
                     self.turn_number += 1
-                    self.mgr.reset_all_monster_turns()
+                    self.mgr.reset_monster_turns_and_visibility(self.player.position)
                 # Draw the monsters
                 for mon in self.mgr.monsters_list:
                     if mon.visible:

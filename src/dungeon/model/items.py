@@ -20,11 +20,12 @@ class ItemTypes(Enum):
     """Item Name, Type, Effect."""
 
     RED_BERRY = ("a Red Berry", ItemClass.FOOD, 5)
-    YELLOW_BERRY = ("a Yellow Berry", ItemClass.EXP,  5)
+    ORANGE_BERRY = ("an Orange Berry", ItemClass.EXP,  5)
     BREAD = ("Bread", ItemClass.FOOD,  10)
-    POITION = ("a Poition", ItemClass.EXP,  10)
-    GREEN_BERRY = ("a Green Berry", ItemClass.DAMAGE,  5)
-    TRAP = ("a Trap Item", ItemClass.DAMAGE,  15)
+    BLUE_BERRY = ("a Blue Berry", ItemClass.DAMAGE,  5)
+    PURPLE_POITION = ("a Trap Item", ItemClass.DAMAGE,  15)
+    CHEST = ("a Treasure Chest", ItemClass.EXP,  10)
+    YELLOW_POITION = ("a Yellow Poition", ItemClass.EXP,  10)
 
 
 EXP_MULTIPLIER: int = 8

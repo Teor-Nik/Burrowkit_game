@@ -11,25 +11,32 @@ class EntityType(Enum):
 
     PLAYER = 0
     KIT = 1
-    RAT = 2
-    OOZE = 3
-    GOBLIN = 4
-    GOBLIN_BRUTE = 5
-    GOBLIN_KING = 6
+    RATBLACK = 2
+    RATBROWN = 3
+    RATGREY = 4
+    RATWHITE = 5
+    SLIMEBLUE = 6
+    SLIMEGREEN = 7
+    SLIMEORANGE = 8
+    SLIMEPINK = 9
+    SLIMEPURPLE = 10
+    GOBLIN = 11
+    GOBLIN_BRUTE = 12
+    GOBLIN_KING = 13
 
 
 class EntityAttack(Enum):
     """Attack options, damage, hit rate and level required."""
 
-    PUNCH = ("Punch", 2, 0.80, 1)
+    PUNCH = ("Key 1: Punch", 2, 0.80, 1)
     SLUDGE = ("Sludge", 1, 0.80, 1)
     BITE = ("Bite", 1, 0.60, 1)
     CLUB_BASH = ("Club Bash", 2, 0.80, 1)
     BODYSLAM = ("BodySlam", 2, 0.80, 1)
-    STAB = ("Stab", 3, 0.75, 2)
-    SLASH = ("Slash", 4, 0.70, 3)
-    IRON_JAB = ("Iron Jab", 7, 0.60, 4)
-    BLADE_RUSH = ("Phantom Blade Rush", 10, 0.50, 5)
+    STAB = ("Key 2: Stab", 3, 0.75, 2)
+    SLASH = ("Key 3: Slash", 4, 0.70, 3)
+    IRON_JAB = ("Key 4: Iron Jab", 7, 0.60, 4)
+    BLADE_RUSH = ("Key 5: Phantom Blade Rush", 10, 0.50, 5)
 
 ALLOWED_ATTACKS = [
     (EntityAttack.PUNCH, EntityType.PLAYER),
@@ -37,8 +44,15 @@ ALLOWED_ATTACKS = [
     (EntityAttack.SLASH, EntityType.PLAYER),
     (EntityAttack.IRON_JAB, EntityType.PLAYER),
     (EntityAttack.BLADE_RUSH, EntityType.PLAYER),
-    (EntityAttack.SLUDGE, EntityType.OOZE),
-    (EntityAttack.BITE, EntityType.RAT),
+    (EntityAttack.SLUDGE, EntityType.SLIMEBLUE),
+    (EntityAttack.SLUDGE, EntityType.SLIMEGREEN),
+    (EntityAttack.SLUDGE, EntityType.SLIMEORANGE),
+    (EntityAttack.SLUDGE, EntityType.SLIMEPINK),
+    (EntityAttack.SLUDGE, EntityType.SLIMEPURPLE),
+    (EntityAttack.BITE, EntityType.RATBLACK),
+    (EntityAttack.BITE, EntityType.RATBROWN),
+    (EntityAttack.BITE, EntityType.RATGREY),
+    (EntityAttack.BITE, EntityType.RATWHITE),
     (EntityAttack.PUNCH, EntityType.GOBLIN),
     (EntityAttack.PUNCH, EntityType.GOBLIN_BRUTE),
     (EntityAttack.CLUB_BASH, EntityType.GOBLIN_BRUTE),
@@ -55,6 +69,7 @@ class Direction(Enum):
     RIGHT = (0, -1, 4)
 
 HEALTH_MULTIPLIER: int = 15
+EXP_MULTIPLIER: int = 100
 
 class Entity:
     """Class representing an entity within the dungeon game."""
@@ -63,11 +78,13 @@ class Entity:
         """Initialise an Entity."""
         self.game = game
         self.position = position
+        self.image = None
         self.creature = None
         self.level = 1  # Entity current level, starts at 1
         self.hp = self.level * HEALTH_MULTIPLIER
         self.experience = 0  # Entity current experience, starts at 0
         self.damage = 0  # Entity current damage, starts at 0
+        self.fainted = False
         self.turn = 1  # Entity turn counter - may remove this if not used
         self.set_reference_id(id)
 
@@ -77,10 +94,13 @@ class Entity:
         """Move Entity to grid coordinates."""
         new_row = self.position[0] - movement.value[0]
         new_col = self.position[1] - movement.value[1]
+        # print(taken_pos, "/n current:",self.position, "/n change", new_row, new_col)
+        # print(self.game.validate_update(new_row, new_col))
         if (
             self.game.validate_update(new_row, new_col)
             and (new_row, new_col) not in taken_pos
         ):
+            # print("all good")
             self.position = self.game.game_progress(new_row, new_col)
             self.turn += 1
             return True
@@ -107,6 +127,49 @@ class Entity:
         if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
             match_position = True
         return match_position
+
+    def increase_exp(self, exp_value: int) -> None:
+        """Increase the player EXP based on level and monster killed."""
+        self.experience += exp_value
+        self.determine_level()
+
+    def determine_level(self) -> None:
+        """Determine the player Level and reset experieince on level up."""
+        if self.experience >= self.level * EXP_MULTIPLIER:
+            self.level += 1
+            self.hp = self.level * HEALTH_MULTIPLIER
+            if self.damage >= self.hp / 4:
+                self.damage = round(self.hp / 4)
+            self.experience = 0
+
+    def remove_damage(self, health_value: int) -> None:
+        """Calculage the entities damage resoration."""
+        calc_new_damage = self.damage - health_value
+        check_new_hp = self.hp - calc_new_damage
+        if check_new_hp > self.hp:
+            self.damage = 0
+        else:
+            self.damage -= health_value
+
+    def take_damage(self, impact_value: int) -> None:
+        """Calculage the entities damage until no health left."""
+        # print(impact_value)
+        if impact_value > 0:
+            fainted = False
+            new_damage = self.damage + impact_value
+            if new_damage >= self.hp:
+                fainted = True
+            else:
+                self.damage += impact_value
+            if fainted:
+                if self.creature == EntityType.PLAYER:
+                    print("Entity has run out of health.")
+                    self.damage = round(self.hp / 4)
+                    self.position = self.game.level_position(False)
+                    self.fainted = True
+                    self.turn = 1
+                else:
+                    self.fainted = True
 
     def set_reference_id(self, num: int) -> None:
         """Set the monsters ID reference."""

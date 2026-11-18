@@ -20,16 +20,18 @@ class Panel(Enum):
 
 WINDOW_BKGND_COLOUR = (144, 209, 197)  # Green map background 90D1C5
 PROGRESS_WINDOW_BKGND_COLOUR = (165, 144, 209)
-W_HEIGHT = 1000  # larger to allow for buttons
+W_HEIGHT = 800  # larger to allow for buttons
 W_WIDTH = 1500  # larger to allow for buttons
-MAP_SIZE = 800
+MAP_SIZE = 1000
 # Calculate half dimensions
 HALF_WIDTH = W_WIDTH // 2
 HALF_HEIGHT = W_HEIGHT // 2
-PANEL_WIDTH = 200
-PANEL_HEIGHT = 200
-BLOCK_SMALL = 20
-OBJECT_SMALL = 12
+PANEL_WIDTH = 400
+PANEL_HEIGHT = 400
+BLOCK_SMALL = 40
+OBJECT_SMALL = 40
+OBJECT_XS = 40
+ITEM_SMALL = 13
 
 # Type alias for RGB tuple
 RGB = tuple[int, int, int]
@@ -44,21 +46,59 @@ COLOUR_MAP: dict[Tile, RGB] = {
 
 COLOUR_ENTITIES: dict[EntityType, RGB] = {
     EntityType.PLAYER: (144, 156, 209),  # Blue Player
-    EntityType.RAT: (131, 129, 133),  # Red monster
-    EntityType.OOZE: (98, 219, 222),  # Red monster
+    EntityType.RATBLACK: (131, 129, 133),  # Red monster
+    EntityType.RATWHITE: (131, 129, 133),  # Red monster
+    EntityType.RATGREY: (131, 129, 133),  # Red monster
+    EntityType.RATBROWN: (131, 129, 133),  # Red monster
+    EntityType.SLIMEBLUE: (98, 219, 222),  # Red monster
+    EntityType.SLIMEGREEN: (98, 219, 222),  # Red monster
+    EntityType.SLIMEORANGE: (98, 219, 222),  # Red monster
+    EntityType.SLIMEPINK: (98, 219, 222),  # Red monster
+    EntityType.SLIMEPURPLE: (98, 219, 222),  # Red monster
     EntityType.GOBLIN: (222, 125, 98),  # Red monster
     EntityType.GOBLIN_BRUTE: (214, 109, 109),  # Red monster
     EntityType.GOBLIN_KING: (184, 39, 39),  # Red monster
     EntityType.KIT: (209, 165, 144),  # Kit brown (fawn)
 }
 
+DIRECTORY:str = "src/dungeon/model/images"
+
+OBJECT_IMAGE: dict[EntityType | ItemTypes | Tile, str] = {
+    EntityType.PLAYER: "knight.png",
+    EntityType.RATBLACK: "rat_black.png",
+    EntityType.RATBROWN: "rat_brown.png",
+    EntityType.RATGREY: "rat_grey.png",
+    EntityType.RATWHITE: "rat_white.png",
+    EntityType.SLIMEBLUE: "slime_blue.png",
+    EntityType.SLIMEGREEN: "slime_green.png",
+    EntityType.SLIMEORANGE: "slime_orange.png",
+    EntityType.SLIMEPINK: "slime_pink.png",
+    EntityType.SLIMEPURPLE: "slime_purple.png",
+    EntityType.GOBLIN: "goblin_small.png",
+    EntityType.GOBLIN_BRUTE: "goblin_brute.png",
+    EntityType.GOBLIN_KING: "goblin_king.png",
+    EntityType.KIT: "wolf_grey.png",
+    ItemTypes.BLUE_BERRY: "berry_blue.png",
+    ItemTypes.ORANGE_BERRY: "berry_orange.png",
+    ItemTypes.BREAD: "bread.png",
+    ItemTypes.YELLOW_POITION: "potion_yellow.png",
+    ItemTypes.RED_BERRY: "berry_red.png",
+    ItemTypes.PURPLE_POITION: "potion_purple.png",
+    ItemTypes.CHEST: "treasure_chest.png",
+    Tile.WALL: "rock_large.png",
+    Tile.STAIR: "stairs.png",
+    Tile.GOAL: "exit_door.png",
+    Tile.ENTRANCE: "trap_door.png",
+}
+
 COLOUR_ITEMS: dict[ItemTypes, RGB] = {
-    ItemTypes.GREEN_BERRY: (40, 77, 26),  # dark yelloy/green
-    ItemTypes.YELLOW_BERRY: (77, 76, 26),  # dark yellow
-    ItemTypes.BREAD: (77, 63, 26),  # dark yellow/orange
-    ItemTypes.POITION: (26, 77, 57),  # dark green
-    ItemTypes.RED_BERRY: (77, 26, 26),  # dark red
-    ItemTypes.TRAP: (68, 26, 77),  # dark purple
+    ItemTypes.BLUE_BERRY: (94, 168, 37),  # yelloy/green
+    ItemTypes.ORANGE_BERRY: (209, 194, 29),  # gold yellow
+    ItemTypes.BREAD: (209, 122, 29),  # brown/orange
+    ItemTypes.YELLOW_POITION: (89, 189, 25),  # bright green
+    ItemTypes.RED_BERRY: (189, 25, 47),  # red
+    ItemTypes.PURPLE_POITION: (113, 33, 122),  # dark purple
+    ItemTypes.CHEST: (94, 168, 37),
 }
 
 
@@ -83,46 +123,18 @@ class GameRenderer:
         self.screen.fill(WINDOW_BKGND_COLOUR)  # Clear screen
 
         # Top-left quadrant for MAP
-        pygame.draw.rect(
-            self.screen,
-            (30, 117, 82),
-            (0, 0, MAP_SIZE // 2, MAP_SIZE // 2)
-        )
-        self.map_section = self.screen.subsurface((0, 0, MAP_SIZE // 2, MAP_SIZE // 2))
+        map_rect = pygame.Rect(0, 0, 810, 800)
+        self.map_section = self.screen.subsurface(map_rect)
+        player_rect = pygame.Rect(805, 0, 695, 325)
+        overall_rect = pygame.Rect(805, 320, 695, 325)
+        kit_rect = pygame.Rect(805, 640, 695, 160)
+        self.player_section = self.screen.subsurface(player_rect)
+        self.kit_section = self.screen.subsurface(kit_rect)
+        self.overall_section = self.screen.subsurface(overall_rect)
 
-        # Top-right quadrant for Player section
-        pygame.draw.rect(
-            self.screen, (182, 205, 240), (HALF_WIDTH, 0, HALF_WIDTH, HALF_HEIGHT)
-        )
-        self.player_section = self.screen.subsurface(
-            (HALF_WIDTH, 0, HALF_WIDTH, HALF_HEIGHT)
-        )
-
-        # Bottom-left quadrant for kit section
-        pygame.draw.rect(
-            self.screen, (224, 216, 200), (0, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT)
-        )
-        self.kit_section = self.screen.subsurface(
-            (0, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT)
-        )
-
-        # Bottom-right quadrant for Overall Game Stats
-        pygame.draw.rect(
-            self.screen,
-            (200, 224, 216),
-            (HALF_WIDTH, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT),
-        )
-        self.overall_section = self.screen.subsurface(
-            (HALF_WIDTH, HALF_HEIGHT, HALF_WIDTH, HALF_HEIGHT)
-        )
-
-        # Optional: draw dividing lines
-        pygame.draw.line(
-            self.screen, (173, 161, 146), (HALF_WIDTH, 0), (HALF_WIDTH, W_HEIGHT), 5
-        )
-        pygame.draw.line(
-            self.screen, (173, 161, 146), (0, HALF_HEIGHT), (W_WIDTH, HALF_HEIGHT), 5
-        )
+        border_color = (173, 161, 146)
+        for rect in [map_rect, player_rect, overall_rect, kit_rect]:
+            pygame.draw.rect(self.screen, border_color, rect, 10)
 
     # Function to get top-left point for each quadrant in screen coordinates
     def determine_quadrant_corner(self, type: pygame.Surface) -> tuple[int, int]:
@@ -130,11 +142,11 @@ class GameRenderer:
         if type == self.map_section:
             return (0, 0)  # Top-left quadrant
         if type == self.player_section:
-            return (HALF_WIDTH, 0)  # Top-right quadrant
+            return (809, 10)  # Top-right quadrant
         if type == self.kit_section:
-            return (0, HALF_HEIGHT)  # Bottom-left quadrant
+            return (809, 645)  # Bottom-left quadrant
         if type == self.overall_section:
-            return (HALF_WIDTH, HALF_HEIGHT)  # Bottom-right quadrant
+            return (809, 325)  # Bottom-right quadrant
         return (0, 0)
 
     def reload_game_window(self) -> None:
@@ -148,7 +160,23 @@ class GameRenderer:
                 colour = COLOUR_MAP[tile]
                 row = row_position * BLOCK_SMALL
                 col = col_position * BLOCK_SMALL
-                self.render_map_cell(colour, row, col, BLOCK_SMALL)
+                rect = self.render_cell(
+                    COLOUR_MAP[Tile.EMPTY],
+                    row,
+                    col,
+                    OBJECT_SMALL,
+                )
+                success = False
+                if tile != Tile.EMPTY:
+                    success = self.render_image_rect(rect, OBJECT_SMALL, tile)
+                if not success:
+                    rect = self.render_cell(
+                        colour,
+                        row,
+                        col,
+                        OBJECT_SMALL,
+                    )
+                    self.render_cell(colour, row, col, BLOCK_SMALL)
 
     def render_panel(self, panel: Panel, label: str, details: str) -> None:
         """Render the panel based on the Panel type and information."""
@@ -176,33 +204,76 @@ class GameRenderer:
         row_num = coords[0] * BLOCK_SMALL
         col_num = coords[1] * BLOCK_SMALL
         colour = COLOUR_ENTITIES[type]
-
-        half_diff = (BLOCK_SMALL - OBJECT_SMALL) / 2
-        self.render_map_cell(
-            colour,
-            round(row_num + half_diff),
-            round(col_num + half_diff),
+        bkgnd_colour = COLOUR_MAP[Tile.EMPTY]
+        half_diff_block = (BLOCK_SMALL - OBJECT_SMALL) / 2
+        rect = self.render_cell(
+            bkgnd_colour,
+            round(row_num + half_diff_block),
+            round(col_num + half_diff_block),
             OBJECT_SMALL,
         )
+        success = self.render_image_rect(rect, OBJECT_SMALL, type)
+        if not success:
+            rect = self.render_cell(
+                colour,
+                round(row_num + half_diff_block),
+                round(col_num + half_diff_block),
+                OBJECT_SMALL,
+            )
+
+    def render_image_rect(
+            self, rect: pygame.Rect, size: int, type: EntityType | ItemTypes | Tile
+    ) -> bool:
+        """Render an image onto a rectangle."""
+        # Load and scale image to fit rectangle
+        try:
+            img = f"{DIRECTORY}/{OBJECT_IMAGE[type]}"
+            image = pygame.image.load(img)
+            # Scale image to rectangle size
+            image_scaled = pygame.transform.scale(image, (size, size))
+            # Render image inside rectangle
+            self.screen.blit(image_scaled, rect.topleft)
+            return True
+        except pygame.error as e:
+            print(f"Error loading image: {e}")
+            return False
 
     def draw_item(self, type: ItemTypes, coords: tuple[int, int]) -> None:
         """Draw the Items on the level."""
         row_num = coords[0] * BLOCK_SMALL
         col_num = coords[1] * BLOCK_SMALL
         colour = COLOUR_ITEMS[type]
-        half_diff = (BLOCK_SMALL - OBJECT_SMALL) / 2
-        self.render_map_cell(
+        bkgnd_colour = COLOUR_MAP[Tile.EMPTY]
+        half_diff_block = (BLOCK_SMALL - OBJECT_SMALL) / 2
+        rect = self.render_cell(
+            bkgnd_colour,
+            round(row_num + half_diff_block),
+            round(col_num + half_diff_block),
+            OBJECT_XS,
+        )
+        half_diff = (BLOCK_SMALL - ITEM_SMALL) / 2
+        success = self.render_image_rect(rect, OBJECT_SMALL, type)
+        if not success:
+            self.render_circle_object(
                 colour,
                 round(row_num + half_diff),
                 round(col_num + half_diff),
-                OBJECT_SMALL,
-        )
+                ITEM_SMALL,
+            )
 
-    def render_map_cell(
+    def render_circle_object(
         self, colour: tuple[int, int, int], row: int, col: int, size: int
     ) -> None:
+        """Render a single round object on the map."""
+        pygame.draw.circle(self.screen, colour, (col, row), size)
+
+    def render_cell(
+        self, colour: tuple[int, int, int], row: int, col: int, size: int
+    ) -> pygame.Rect:
         """Render a single cell based on the cell type passed in."""
-        pygame.draw.rect(self.screen, colour, (col, row, size, size))
+        rect = pygame.Rect(col, row, size, size)
+        pygame.draw.rect(self.screen, colour, rect)
+        return rect
 
     @staticmethod
     def show_error(message: str) -> None:

@@ -33,22 +33,24 @@ class Manager:
     def check_monsters_health(self) -> None:
         """Ensure all monsters health is still valid."""
         for mon in self.monsters_list:
-            if mon.hp <= 0:
+            if mon.fainted:
                 self.monsters_list.remove(mon)
                 self.entities_list.remove(mon)
 
     def list_taken_positions(self) -> list[tuple[int, int]]:
         """Provide a list of every filled position by a Monster."""
         filled_positions: list[tuple[int, int]] = []
+        filled_positions.clear()
+        self.check_monsters_health()
         for mon in self.entities_list:
             filled_positions.append(mon.position)
         return filled_positions
 
-    def reset_all_monster_turns(self) -> None:
+    def reset_monster_turns_and_visibility(self, player_pos: tuple[int, int]) -> None:
         """Reset all of the monster moves to process next turn."""
-        for idx, current in enumerate(self.monsters_list):
-            # print ("resetting: " , idx)
-            current.move_processed = False
+        for idx, monster in enumerate(self.monsters_list):
+            monster.move_processed = False
+            monster.determine_visibility(player_pos)
 
     def generate_monsters(self) -> None:
         """Generate the monsters needed for that level."""

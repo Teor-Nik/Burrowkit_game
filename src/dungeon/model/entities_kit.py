@@ -7,13 +7,12 @@ from dungeon.model.level import GameLevel
 
 
 class KitSubType(Enum):
-    """List of types of monsters and their level, damage and hit rate."""
+    """List of types of Kits and their level, damage and hit rate."""
 
     KIT = ("Kit", 1, 1, 0.50)
     JUNIOR_KIT = ("Junior Kit", 3, 2, 0.45)
-    FOX = ("Fox", 5, 2, 0.45)
-    MASTER_FOX = ("Master Fox", 7, 3, 0.40)
-    ELDER_FOX = ("Elder Fox", 25, 8, 0.75)
+    MASTER_FOX = ("Master", 7, 3, 0.40)
+    ELDER_FOX = ("Elder", 25, 8, 0.75)
 
 class Kit(Entity):
     """Class representing a monster in the dungeon game."""
