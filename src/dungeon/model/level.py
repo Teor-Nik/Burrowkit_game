@@ -104,6 +104,7 @@ LEVEL_4_MAP = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
 
+Position = tuple[int, int]
 
 class Difficulty(Enum):
     """Game difficulty levels, set the experience rate and number of monsters."""
@@ -184,11 +185,11 @@ class GameLevel:
         return coordinates
 
     def validate_update(self, new_row: int, new_col: int) -> bool:
-        """Determine if the requested update is valid, if valid set start position."""
-        valid_move = False
-        if self.tile_at(new_row, new_col) != Tile.WALL:
-            valid_move = True
-        return valid_move
+        """Return True if the player may step onto (new_row, new_col).
+
+        Raises ValueError if the position is off the map.
+        """
+        return self.tile_at(new_row, new_col) is not Tile.WALL
 
     def validate_nonplayer_update(self, new_row: int, new_col: int) -> bool:
         """Determine if the requested update is valid, if valid set start position."""
@@ -217,13 +218,23 @@ class GameLevel:
             self.build_grid()
         return position
 
+    def find_tile(self, tile: Tile) -> Position:
+        """Return the position of the first ``tile`` on the current floor."""
+        for row_position, row_tiles in enumerate(self.level):
+            for col_position, current in enumerate(row_tiles):
+                if current is tile:
+                    return (row_position, col_position)
+        raise ValueError(f"Error: Level {self.current_level} has no {tile.name}.")
+
+    def in_bounds(self, row: int, col: int) -> bool:
+        """Return True if (row, col) is inside the current floor's grid."""
+        return 0 <= row < len(self.level) and 0 <= col < len(self.level[row])
+
     def tile_at(self, row: int, col: int) -> Tile:
-        """Return the type of Tile at a specific position on the current level."""
-        length: int = sum({len(row) for row in self.level}) - 1
-        if row < 0 or col < 0 or row > length or col > length:
+        """Return the Tile at a position on the current floor."""
+        if not self.in_bounds(row, col):
             raise ValueError("Error: Map out of bounds error occurred.")
-        tile = self.level[row][col]
-        return tile
+        return self.level[row][col]
 
     def check_grid(self, level_map: list[list[int]]) -> None:
         """Check that the grid requested is valid."""
@@ -244,7 +255,7 @@ class GameLevel:
         self.level = map_grid
 
     def level_difficulty(self) -> None:
-        """Set the difficulty of the level based on total number of levels."""
+        """Set the difficulty of the floor based on the total number of floors."""
         easy_part = round(self.max_level / 3)
         hard_part = round(self.max_level / 6)
         if self.current_level <= easy_part:
