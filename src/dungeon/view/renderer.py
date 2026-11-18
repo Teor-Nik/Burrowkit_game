@@ -1,6 +1,7 @@
 """Module for rendering the game window using Pygame."""
 
 from enum import Enum
+from pathlib import Path
 
 import pygame
 
@@ -61,7 +62,7 @@ COLOUR_ENTITIES: dict[EntityType, RGB] = {
     EntityType.KIT: (209, 165, 144),  # Kit brown (fawn)
 }
 
-DIRECTORY:str = "src/dungeon/model/images"
+DIRECTORY:str = "src/dungeon/view/images"
 
 OBJECT_IMAGE: dict[EntityType | ItemTypes | Tile, str] = {
     EntityType.PLAYER: "knight.png",
@@ -101,6 +102,8 @@ COLOUR_ITEMS: dict[ItemTypes, RGB] = {
     ItemTypes.CHEST: (94, 168, 37),
 }
 
+ASSET_DIR = Path(__file__).parent / "images"
+SpriteKey = EntityType | ItemTypes | Tile
 
 class GameRenderer:
     """Class responsible for rendering the game window."""
@@ -116,6 +119,21 @@ class GameRenderer:
         self.header_font = pygame.font.SysFont(None, 45)
         self.detail_font = pygame.font.SysFont(None, 20)
         self.draw_quadrants()
+        self.images = self._load_images()
+
+
+    @staticmethod
+    def _load_images() -> dict[SpriteKey, pygame.Surface]:
+        """Load and scale every sprite once; missing ones fall back to colours."""
+        images: dict[SpriteKey, pygame.Surface] = {}
+        for key, filename in OBJECT_IMAGE.items():
+            try:
+                image = pygame.image.load(ASSET_DIR / filename).convert_alpha()
+            except (pygame.error, FileNotFoundError) as error:
+                print("Could not load %s: %s", filename, error)
+                continue
+            images[key] = pygame.transform.scale(image, (BLOCK_SMALL, BLOCK_SMALL))
+        return images
 
     # Function to draw the 4 quadrants
     def draw_quadrants(self) -> None:
@@ -166,17 +184,19 @@ class GameRenderer:
                     col,
                     OBJECT_SMALL,
                 )
-                success = False
                 if tile != Tile.EMPTY:
-                    success = self.render_image_rect(rect, OBJECT_SMALL, tile)
-                if not success:
-                    rect = self.render_cell(
-                        colour,
-                        row,
-                        col,
-                        OBJECT_SMALL,
-                    )
-                    self.render_cell(colour, row, col, BLOCK_SMALL)
+                    image = self.images.get(tile)
+                    if image is not None:
+                        self.screen.blit(image, rect.topleft)
+                    # success = self.render_image_rect(rect, OBJECT_SMALL, tile)
+                    else:
+                        rect = self.render_cell(
+                            colour,
+                            row,
+                            col,
+                            OBJECT_SMALL,
+                        )
+                        self.render_cell(colour, row, col, BLOCK_SMALL)
 
     def render_panel(self, panel: Panel, label: str, details: str) -> None:
         """Render the panel based on the Panel type and information."""
@@ -201,9 +221,9 @@ class GameRenderer:
         self, type: EntityType, coords: tuple[int, int]
     ) -> None:
         """Draw the player on the level."""
+        image = self.images.get(type)
         row_num = coords[0] * BLOCK_SMALL
         col_num = coords[1] * BLOCK_SMALL
-        colour = COLOUR_ENTITIES[type]
         bkgnd_colour = COLOUR_MAP[Tile.EMPTY]
         half_diff_block = (BLOCK_SMALL - OBJECT_SMALL) / 2
         rect = self.render_cell(
@@ -212,14 +232,11 @@ class GameRenderer:
             round(col_num + half_diff_block),
             OBJECT_SMALL,
         )
-        success = self.render_image_rect(rect, OBJECT_SMALL, type)
-        if not success:
-            rect = self.render_cell(
-                colour,
-                round(row_num + half_diff_block),
-                round(col_num + half_diff_block),
-                OBJECT_SMALL,
-            )
+        print (image)
+        if image is not None:
+            self.screen.blit(image, rect.topleft)
+        else:
+            pygame.draw.rect(self.screen, COLOUR_ENTITIES[type], rect)
 
     def render_image_rect(
             self, rect: pygame.Rect, size: int, type: EntityType | ItemTypes | Tile
@@ -240,9 +257,9 @@ class GameRenderer:
 
     def draw_item(self, type: ItemTypes, coords: tuple[int, int]) -> None:
         """Draw the Items on the level."""
+        image = self.images.get(type)
         row_num = coords[0] * BLOCK_SMALL
         col_num = coords[1] * BLOCK_SMALL
-        colour = COLOUR_ITEMS[type]
         bkgnd_colour = COLOUR_MAP[Tile.EMPTY]
         half_diff_block = (BLOCK_SMALL - OBJECT_SMALL) / 2
         rect = self.render_cell(
@@ -251,15 +268,11 @@ class GameRenderer:
             round(col_num + half_diff_block),
             OBJECT_XS,
         )
-        half_diff = (BLOCK_SMALL - ITEM_SMALL) / 2
-        success = self.render_image_rect(rect, OBJECT_SMALL, type)
-        if not success:
-            self.render_circle_object(
-                colour,
-                round(row_num + half_diff),
-                round(col_num + half_diff),
-                ITEM_SMALL,
-            )
+        if image is not None:
+                self.screen.blit(image, rect.topleft)
+        else:
+            pygame.draw.rect(self.screen, COLOUR_ITEMS[type], rect)
+
 
     def render_circle_object(
         self, colour: tuple[int, int, int], row: int, col: int, size: int

@@ -154,6 +154,8 @@ class GameLevel:
         """End the current game."""
         self.game_finished = True
 
+
+
     def level_position(self, move_back_down: bool) -> tuple[int, int]:
         """Get the Row and Col of the requested level."""
         tile: Tile
@@ -192,31 +194,37 @@ class GameLevel:
         return self.tile_at(new_row, new_col) is not Tile.WALL
 
     def validate_nonplayer_update(self, new_row: int, new_col: int) -> bool:
-        """Determine if the requested update is valid, if valid set start position."""
-        valid_move = False
-        if self.tile_at(new_row, new_col) == Tile.EMPTY:
-            valid_move = True
-        return valid_move
+        """Return True if a monster or the Kit may step onto (new_row, new_col).
+
+        Non-player entities only walk on empty floor, never stairs or doors.
+        """
+        return (
+            self.in_bounds(new_row, new_col)
+            and self.tile_at(new_row, new_col) is Tile.EMPTY
+        )
 
     def game_progress(self, new_row: int, new_col: int) -> tuple[int, int]:
-        """Progress game level and set new position if needed."""
-        position = (new_row, new_col)
-        temp_curr_level = self.current_level
-        if self.tile_at(new_row, new_col) == Tile.GOAL:
+        """Apply the effect of the player entering a tile and return their position.
+
+        Stairs go down a floor, the entrance goes back up (except on floor 1)
+        and the goal ends the game.
+        """
+        tile = self.tile_at(new_row, new_col)
+        if tile is Tile.GOAL:
             self.end_game()
-        if self.tile_at(new_row, new_col) == Tile.STAIR:
-            if self.current_level + 1 <= self.max_level:
-                self.current_level += 1
-                self.level_difficulty()
-                position = self.level_position(False)
-        if self.tile_at(new_row, new_col) == Tile.ENTRANCE:
-            if self.current_level - 1 > 0:
-                self.current_level -= 1
-                self.level_difficulty()
-                position = self.level_position(True)
-        if self.current_level != temp_curr_level:
-            self.build_grid()
-        return position
+        elif tile is Tile.STAIR and self.current_level < self.max_level:
+            self._change_floor(self.current_level + 1)
+            return self.find_tile(Tile.ENTRANCE)
+        elif tile is Tile.ENTRANCE and self.current_level > 1:
+            self._change_floor(self.current_level - 1)
+            return self.find_tile(Tile.STAIR)
+        return (new_row, new_col)
+
+    def _change_floor(self, new_level: int) -> None:
+        """Switch to another floor and rebuild its grid."""
+        self.current_level = new_level
+        self.level_difficulty()
+        self.build_grid()
 
     def find_tile(self, tile: Tile) -> Position:
         """Return the position of the first ``tile`` on the current floor."""
@@ -237,22 +245,16 @@ class GameLevel:
         return self.level[row][col]
 
     def check_grid(self, level_map: list[list[int]]) -> None:
-        """Check that the grid requested is valid."""
-        valid = True
-        for row_pos, row in enumerate(level_map):
-            for col_pos, col in enumerate(row):
-                if col not in Tile:
-                    valid = False
-        if not valid:
+        """Raise ValueError if the raw map contains a value that is not a Tile."""
+        valid_values = {tile.value for tile in Tile}
+        if any(value not in valid_values for row in level_map for value in row):
             raise ValueError("Error: Map tile not found in Tile options.")
 
     def build_grid(self) -> None:
-        """Build the level of the map into proper Tile."""
-        self.check_grid(self.rawlevel_dict[self.current_level])
-        map_grid: list[list[Tile]] = [
-            [Tile(col) for col in row] for row in self.rawlevel_dict[self.current_level]
-        ]
-        self.level = map_grid
+        """Build the current floor's raw map into Tiles."""
+        raw_map = self.rawlevel_dict[self.current_level]
+        self.check_grid(raw_map)
+        self.level = [[Tile(value) for value in row] for row in raw_map]
 
     def level_difficulty(self) -> None:
         """Set the difficulty of the floor based on the total number of floors."""
