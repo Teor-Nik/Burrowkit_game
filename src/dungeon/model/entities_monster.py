@@ -1,5 +1,6 @@
 """Entities of a Monster Sub-Class."""
 
+from dataclasses import dataclass
 import random
 from enum import Enum
 
@@ -42,7 +43,33 @@ SubType: dict[EntityType, EntitySubType] = {
     EntityType.GOBLIN_KING: EntitySubType.GOBLIN_KING,
 }
 
-PLAYER_CHASE_DISTANCE: int = 5
+@dataclass(frozen=True)
+class MonsterStats:
+    """Fixed stats for one kind of monster."""
+
+    name: str
+    max_hp: int
+    exp_reward: int
+    hit_rate: float
+
+# Ordered weakest to strongest: earlier monsters spawn more often.
+MONSTER_STATS: dict[EntityType, MonsterStats] = {
+    EntityType.RATBLACK: MonsterStats("Rat", 4, 10, 0.75),
+    EntityType.RATBROWN: MonsterStats("Rat", 4, 10, 0.50),
+    EntityType.RATGREY: MonsterStats("Rat", 4, 10, 0.65),
+    EntityType.RATWHITE: MonsterStats("Rat", 4, 10, 0.85),
+    EntityType.SLIMEBLUE: MonsterStats("Slime", 6, 20, 0.55),
+    EntityType.SLIMEGREEN: MonsterStats("Slime", 6, 20, 0.85),
+    EntityType.SLIMEORANGE: MonsterStats("Slime", 6, 20, 0.75),
+    EntityType.SLIMEPINK: MonsterStats("Slime", 6, 20, 0.55),
+    EntityType.SLIMEPURPLE: MonsterStats("Slime", 6, 20, 0.90),
+    EntityType.GOBLIN: MonsterStats("Goblin", 7, 25, 0.65),
+    EntityType.GOBLIN_BRUTE: MonsterStats("Goblin Brute", 10, 30, 0.75),
+    EntityType.GOBLIN_KING: MonsterStats("Goblin King", 25, 80, 0.95),
+}
+
+
+PLAYER_CHASE_DISTANCE: int = 5 # monsters notice the player within this many tiles
 
 class Monster(Entity):
     """Class representing a monster in the dungeon game."""
@@ -56,7 +83,8 @@ class Monster(Entity):
         self.position = position
         self.creature = mon_type
         self.monster_type = SubType[self.creature]
-        self.hp = self.monster_type.value[1]
+        self.stats = MONSTER_STATS[self.creature]
+        self.hp = self.stats.max_hp
         self.visible = False
         self.move_processed = False
         self.most_recent_move = None
