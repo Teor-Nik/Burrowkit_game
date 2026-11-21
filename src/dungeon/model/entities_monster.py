@@ -111,7 +111,7 @@ class Monster(Entity):
         hp = self.monster_type.value[1]
         hp_remaining = self.hp
         # format raw values
-        name_and_id = f"  {name} (#{self.id_refererence})"
+        name_and_id = f"  {name} (#{self.entity_id})"
         hp_stats = f"HP: ({hp_remaining} / {hp})"
         recent_move: str = ""
         if self.move_processed:
@@ -158,7 +158,7 @@ class Monster(Entity):
             while not valid_movement:
                 movement = round(random.uniform(1, len(Direction)))
                 for direction in enumerate(Direction):
-                    if movement == direction[1].value[2]:
+                    if movement-1 == direction[0]:
                         new_row = self.position[0] - direction[1].value[0]
                         new_col = self.position[1] - direction[1].value[1]
                         if (

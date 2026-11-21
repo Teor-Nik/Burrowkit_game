@@ -8,8 +8,8 @@ from dungeon.model import (
     entities_kit,
     entities_monster,
     entities_player,
+    game,
     level,
-    manager,
 )
 from dungeon.view import renderer
 
@@ -49,7 +49,7 @@ class GameController:
         """Initialize the game controller."""
         self.level_model = level_model
         self.view = view_renderer
-        self.mgr = manager.Manager(self.level_model)
+        self.mgr = game.Game(self.level_model)
         self.player = entities_player.Player(
             self.level_model, self.level_model.start_position, self.mgr.entities_count
         )
@@ -198,7 +198,7 @@ class GameController:
         """Process the monsters part of this turn."""
         self.get_next_monster(self.monster_turn)
         # Move the Monster to a non-taken position is possible
-        if self.player.turn > 5 and self.monster_turn is not None:
+        if self.monster_turn is not None:
             self.monster_turn.move_monster(
                 self.player.position, self.mgr.list_taken_positions()
             )

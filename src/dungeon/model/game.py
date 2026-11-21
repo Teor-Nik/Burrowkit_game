@@ -1,10 +1,10 @@
-"""Manager of all Entities and Items for the Controller."""
+"""Game Manager of all Entities and Items for the Controller."""
 
 from dungeon.model import entities, entities_monster, items, level
 from dungeon.model.level import GameLevel
 
 
-class Manager:
+class Game:
     """Class that manages Entities in the dungeon."""
 
     def __init__(self, game: GameLevel) -> None:
@@ -42,7 +42,7 @@ class Manager:
         filled_positions: list[tuple[int, int]] = []
         filled_positions.clear()
         self.check_monsters_health()
-        for mon in self.entities_list:
+        for mon in self.monsters_list:
             filled_positions.append(mon.position)
         return filled_positions
 

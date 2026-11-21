@@ -13,6 +13,8 @@ from dungeon.model.level import GameLevel
 class Player(Entity):
     """Class representing a player in the dungeon game."""
 
+    creature = EntityType.PLAYER
+
     def __init__(self, game: GameLevel, position: tuple[int, int], id: int) -> None:
         """Initialise the Player."""
         super().__init__(game, position, id)
@@ -22,7 +24,7 @@ class Player(Entity):
     def player_stats(self) -> str:
         """Generate a list of the monster stats."""
         required_exp = self.level * entities.EXP_MULTIPLIER
-        current_damage = self.hp - self.damage
+        current_damage = self.max_hp - self.damage
         attackmoves: str = ""
         filtered_list = self.attack_moves()
         if filtered_list is not None:
@@ -34,7 +36,7 @@ class Player(Entity):
         stats: str = (
             f"\nLevel:   {self.level}\n"
             f"\n    Exp:   {self.experience} / {required_exp}.\n"
-            f"\n    Health:   {current_damage} / {self.hp}\n"
+            f"\n    Health:   {current_damage} / {self.max_hp}\n"
             f"\nAttack Moves   (damage):\n{attackmoves}"
         )
         return stats

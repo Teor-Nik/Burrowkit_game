@@ -3,7 +3,7 @@
 from collections import deque
 from enum import Enum
 
-from dungeon.model.level import GameLevel
+from dungeon.model.level import GameLevel, Position
 
 
 class EntityType(Enum):
@@ -26,67 +26,104 @@ class EntityType(Enum):
 
 
 class EntityAttack(Enum):
-    """Attack options, damage, hit rate and level required."""
+    """Attack options: name, damage, hit rate and the level that unlocks it."""
 
-    PUNCH = ("Key 1: Punch", 2, 0.80, 1)
+    PUNCH = ("Punch", 2, 0.80, 1)
     SLUDGE = ("Sludge", 1, 0.80, 1)
     BITE = ("Bite", 1, 0.60, 1)
     CLUB_BASH = ("Club Bash", 2, 0.80, 1)
-    BODYSLAM = ("BodySlam", 2, 0.80, 1)
-    STAB = ("Key 2: Stab", 3, 0.75, 2)
-    SLASH = ("Key 3: Slash", 4, 0.70, 3)
-    IRON_JAB = ("Key 4: Iron Jab", 7, 0.60, 4)
-    BLADE_RUSH = ("Key 5: Phantom Blade Rush", 10, 0.50, 5)
+    BODYSLAM = ("Body Slam", 2, 0.80, 1)
+    STAB = ("Stab", 3, 0.75, 2)
+    SLASH = ("Slash", 4, 0.70, 3)
+    IRON_JAB = ("Iron Jab", 7, 0.60, 4)
+    BLADE_RUSH = ("Phantom Blade Rush", 10, 0.50, 5)
 
-ALLOWED_ATTACKS = [
-    (EntityAttack.PUNCH, EntityType.PLAYER),
-    (EntityAttack.STAB, EntityType.PLAYER),
-    (EntityAttack.SLASH, EntityType.PLAYER),
-    (EntityAttack.IRON_JAB, EntityType.PLAYER),
-    (EntityAttack.BLADE_RUSH, EntityType.PLAYER),
-    (EntityAttack.SLUDGE, EntityType.SLIMEBLUE),
-    (EntityAttack.SLUDGE, EntityType.SLIMEGREEN),
-    (EntityAttack.SLUDGE, EntityType.SLIMEORANGE),
-    (EntityAttack.SLUDGE, EntityType.SLIMEPINK),
-    (EntityAttack.SLUDGE, EntityType.SLIMEPURPLE),
-    (EntityAttack.BITE, EntityType.RATBLACK),
-    (EntityAttack.BITE, EntityType.RATBROWN),
-    (EntityAttack.BITE, EntityType.RATGREY),
-    (EntityAttack.BITE, EntityType.RATWHITE),
-    (EntityAttack.PUNCH, EntityType.GOBLIN),
-    (EntityAttack.PUNCH, EntityType.GOBLIN_BRUTE),
-    (EntityAttack.CLUB_BASH, EntityType.GOBLIN_BRUTE),
-    (EntityAttack.CLUB_BASH, EntityType.GOBLIN_KING),
-    (EntityAttack.BODYSLAM, EntityType.GOBLIN_KING)
-]
+    def __init__(
+        self, label: str, damage: int, hit_rate: float, unlock_level: int
+    ) -> None:
+        """Unpack the tuple value into named attributes."""
+        self.label = label
+        self.damage = damage
+        self.hit_rate = hit_rate
+        self.unlock_level = unlock_level
+
+_RAT_ATTACKS = (EntityAttack.BITE,)
+_SLIME_ATTACKS = (EntityAttack.SLUDGE,)
+
+
+# Which attacks each kind of entity knows (before level requirements).
+ALLOWED_ATTACKS: dict[EntityType, tuple[EntityAttack, ...]] = {
+    EntityType.PLAYER: (
+        EntityAttack.PUNCH,
+        EntityAttack.STAB,
+        EntityAttack.SLASH,
+        EntityAttack.IRON_JAB,
+        EntityAttack.BLADE_RUSH,
+    ),
+    EntityType.RATBLACK: _RAT_ATTACKS,
+    EntityType.RATBROWN: _RAT_ATTACKS,
+    EntityType.RATGREY: _RAT_ATTACKS,
+    EntityType.RATWHITE: _RAT_ATTACKS,
+    EntityType.SLIMEBLUE: _SLIME_ATTACKS,
+    EntityType.SLIMEGREEN: _SLIME_ATTACKS,
+    EntityType.SLIMEORANGE: _SLIME_ATTACKS,
+    EntityType.SLIMEPINK: _SLIME_ATTACKS,
+    EntityType.SLIMEPURPLE: _SLIME_ATTACKS,
+    EntityType.GOBLIN: (EntityAttack.PUNCH,),
+    EntityType.GOBLIN_BRUTE: (EntityAttack.PUNCH, EntityAttack.CLUB_BASH),
+    EntityType.GOBLIN_KING: (EntityAttack.CLUB_BASH, EntityAttack.BODYSLAM),
+}
 
 class Direction(Enum):
-    """List of possible movement directions."""
+    """Movement directions as (row change, column change)."""
 
-    UP = (1, 0, 1)
-    DOWN = (-1, 0, 2)
-    LEFT = (0, 1, 3)
-    RIGHT = (0, -1, 4)
+    UP = (-1, 0)
+    DOWN = (1, 0)
+    LEFT = (0, -1)
+    RIGHT = (0, 1)
 
+    def step(self, position: Position) -> Position:
+        """Return the position one tile away from ``position`` in this direction."""
+        row, col = position
+        d_row, d_col = self.value
+        return (row + d_row, col + d_col)
+
+def grid_distance(a: Position, b: Position) -> int:
+    """Return the number of king-moves between two tiles (diagonals count as 1)."""
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+
+
+ADJACENT: int = 1  # attacks reach neighbouring tiles, diagonals included
 HEALTH_MULTIPLIER: int = 15
 EXP_MULTIPLIER: int = 100
 
 class Entity:
     """Class representing an entity within the dungeon game."""
 
+    creature: EntityType  # set by each subclass
+
     def __init__(self, game: GameLevel, position: tuple[int, int], id: int) -> None:
         """Initialise an Entity."""
         self.game = game
         self.position = position
-        self.image = None
-        self.creature = None
-        self.level = 1  # Entity current level, starts at 1
-        self.hp = self.level * HEALTH_MULTIPLIER
-        self.experience = 0  # Entity current experience, starts at 0
-        self.damage = 0  # Entity current damage, starts at 0
+        self.entity_id = id
+        self.level = 1
+        self.max_hp = self.level * HEALTH_MULTIPLIER
+        self.experience = 0
+        self.damage = 0  # damage taken so far; current HP is max_hp - damage
         self.fainted = False
-        self.turn = 1  # Entity turn counter - may remove this if not used
-        self.set_reference_id(id)
+        # self.turn = 1  # Entity turn counter - may remove this if not used
+        # self.set_reference_id(id)
+
+    @property
+    def current_hp(self) -> int:
+        """Return the health the entity has left."""
+        return self.max_hp - self.damage
+
+    @property
+    def exp_to_next_level(self) -> int:
+        """Return the experience needed to reach the next level."""
+        return self.level * EXP_MULTIPLIER
 
     def move_direction(
         self, movement: Direction, taken_pos: list[tuple[int, int]]
@@ -102,19 +139,17 @@ class Entity:
         ):
             # print("all good")
             self.position = self.game.game_progress(new_row, new_col)
-            self.turn += 1
+            # self.turn += 1
             return True
         return False
 
     def attack_moves(self) -> list[EntityAttack] | None:
-        """Return a list of valid attack moves."""
-        filtered_move = [
-            attack[1][0] for attack in enumerate(ALLOWED_ATTACKS)
-            if (attack[1][1] == self.creature
-                and attack[1][0].value[3] <= self.level
-            )
+        """Return a list of valid attack moves for the entities level."""
+        return [
+            attack
+            for attack in ALLOWED_ATTACKS.get(self.creature, ())
+            if attack.unlock_level <= self.level
         ]
-        return filtered_move
 
     def check_distance(self, position: tuple[int, int]) -> bool:
         """Check the distance to the a position, if close return True."""
@@ -128,48 +163,31 @@ class Entity:
             match_position = True
         return match_position
 
-    def increase_exp(self, exp_value: int) -> None:
+    def increase_exp(self, exp_value: int) -> int:
         """Increase the player EXP based on level and monster killed."""
         self.experience += exp_value
-        self.determine_level()
-
-    def determine_level(self) -> None:
-        """Determine the player Level and reset experieince on level up."""
-        if self.experience >= self.level * EXP_MULTIPLIER:
+        levels_gained = 0
+        while self.experience >= self.exp_to_next_level:
+            self.experience -= self.exp_to_next_level
             self.level += 1
-            self.hp = self.level * HEALTH_MULTIPLIER
-            if self.damage >= self.hp / 4:
-                self.damage = round(self.hp / 4)
-            self.experience = 0
+            levels_gained += 1
+            self.max_hp = self.level * HEALTH_MULTIPLIER
+            # Levelling up heals you to at least 75% health.
+            self.damage = min(self.damage, round(self.max_hp / 4))
+        return levels_gained
 
     def remove_damage(self, health_value: int) -> None:
-        """Calculage the entities damage resoration."""
-        calc_new_damage = self.damage - health_value
-        check_new_hp = self.hp - calc_new_damage
-        if check_new_hp > self.hp:
-            self.damage = 0
-        else:
-            self.damage -= health_value
+        """Calculate the entities damage restoration."""
+        self.damage = max(0, self.damage - health_value)
 
-    def take_damage(self, impact_value: int) -> None:
-        """Calculage the entities damage until no health left."""
-        # print(impact_value)
-        if impact_value > 0:
-            fainted = False
-            new_damage = self.damage + impact_value
-            if new_damage >= self.hp:
-                fainted = True
-            else:
-                self.damage += impact_value
-            if fainted:
-                if self.creature == EntityType.PLAYER:
-                    print("Entity has run out of health.")
-                    self.damage = round(self.hp / 4)
-                    self.position = self.game.level_position(False)
-                    self.fainted = True
-                    self.turn = 1
-                else:
-                    self.fainted = True
+    def take_damage(self, impact_value: int) -> bool:
+        """Calculate the entities damage until no health left."""
+        if impact_value <= 0:
+            return False
+        self.damage = min(self.max_hp, self.damage + impact_value)
+        if self.damage >= self.max_hp:
+            self.fainted = True
+        return self.fainted
 
     def set_reference_id(self, num: int) -> None:
         """Set the monsters ID reference."""
