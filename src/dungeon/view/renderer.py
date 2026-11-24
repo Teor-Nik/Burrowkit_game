@@ -232,7 +232,7 @@ class GameRenderer:
             round(col_num + half_diff_block),
             OBJECT_SMALL,
         )
-        print (image)
+        # print (image)
         if image is not None:
             self.screen.blit(image, rect.topleft)
         else:

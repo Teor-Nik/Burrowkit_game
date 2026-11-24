@@ -1,7 +1,9 @@
 """Burrowkit Game Dungeon entities."""
 
 from collections import deque
+from collections.abc import Iterator
 from enum import Enum
+from tracemalloc import start
 
 from dungeon.model.level import GameLevel, Position
 
@@ -47,6 +49,7 @@ class EntityAttack(Enum):
         self.hit_rate = hit_rate
         self.unlock_level = unlock_level
 
+#private constants for the Entity class
 _RAT_ATTACKS = (EntityAttack.BITE,)
 _SLIME_ATTACKS = (EntityAttack.SLUDGE,)
 
@@ -83,7 +86,7 @@ class Direction(Enum):
     RIGHT = (0, 1)
 
     def step(self, position: Position) -> Position:
-        """Return the position one tile away from ``position`` in this direction."""
+        """Return the position one tile away from that position in this direction."""
         row, col = position
         d_row, d_col = self.value
         return (row + d_row, col + d_col)
@@ -189,99 +192,140 @@ class Entity:
             self.fainted = True
         return self.fainted
 
-    def set_reference_id(self, num: int) -> None:
-        """Set the monsters ID reference."""
-        self.id_refererence = num + 101
+    def _can_walk(self, position: Position) -> bool:
+        """Return True if a non-player entity may stand on that position (Private)."""
+        return self.game.validate_nonplayer_update(*position)
+
+    @staticmethod
+    def _neighbours(position: Position) -> Iterator[Position]:
+        """Yield the four tiles next to that position using Iterator (Private).
+
+        source: https://stackoverflow.com/questions/1620940/determining-neighbours-of-cell-two-dimensional-list
+        """
+        for direction in Direction:
+            yield direction.step(position)
 
     def bfs_move_away(
-            self, player_pos: tuple[int, int], max_distance: int = 3
-    ) -> tuple[int, int] | None:
+            self, target: Position, max_distance: int = 3
+    ) -> Position | None:
         """Find a move that goes away from the player, up to max_distance."""
-        start = player_pos
-        queue = deque([start])
-        distances: dict[tuple[int, int], int] = {start: 0}
-
-        # BFS from player to get distances
+        distances: dict[Position, int] = {target: 0}
+        queue = deque([target])
         while queue:
-            current_pos = queue.popleft()
-            qrow, qcol = current_pos
-            for _, direction in enumerate(Direction):
-                setrow = qrow + direction.value[0]
-                setcol = qcol + direction.value[1]
-                neighbor_pos = (setrow, setcol)
-                if (
-                    self.game.validate_nonplayer_update(setrow, setcol)
-                    and neighbor_pos not in distances
-                ):
-                    distances[neighbor_pos] = distances[current_pos] + 1
-                    queue.append(neighbor_pos)
-
-        # Current distance from player
-        current_dist = distances.get(self.position, None)
-        if current_dist is None:
-            return None  # Can't reach current position from player
-
-        # Find a neighbor that increases distance but stays within max_distance
-        qrow, qcol = self.position
-        for _, direction in enumerate(Direction):
-            setrow = qrow + direction.value[0]
-            setcol = qcol + direction.value[1]
-            neighbor_pos = (setrow, setcol)
-            if self.game.validate_nonplayer_update(setrow, setcol):
-                neighbor_dist = distances.get(neighbor_pos, None)
-                if (neighbor_dist is not None
-                    and neighbor_dist > current_dist
-                    and neighbor_dist <= max_distance
-                ):
-                    return neighbor_pos  # First valid move away
-
-        return None  # No valid move away
-
-    def bfs_pathfinder(
-        self, player_pos: tuple[int, int]
-    ) -> list[tuple[int, int]] | None:
-        """Find the best path towards the players curernt position."""
-        start = self.position
-        queue = deque([start])
-        parent: dict[tuple[int, int], tuple[int, int] | None] = {start: None}
-        while queue:
-            current_pos = queue.popleft()
-            qrow, qcol = current_pos
-            if current_pos == player_pos:
-                path = []
-                curr: tuple[int, int] | None = current_pos
-                while curr is not None:
-                    curr = parent[curr]
-                    if curr is not None:
-                        path.append(curr)
-                return path
-
-            for direction in enumerate(Direction):
-                setrow = qrow + direction[1].value[0]
-                setcol = qcol + direction[1].value[1]
-                neighbor_pos = (setrow, setcol)
-                if (
-                    self.game.validate_nonplayer_update(setrow, setcol)
-                    and neighbor_pos not in parent
-                ):
-                    parent[neighbor_pos] = current_pos
-                    queue.append(neighbor_pos)
+            current = queue.popleft()
+            for neighbour in self._neighbours(current):
+                if neighbour not in distances and self._can_walk(neighbour):
+                    distances[neighbour] = distances[current] + 1
+                    queue.append(neighbour)
+        # get the current distance from the target to sources position
+        current_distance = distances.get(self.position)
+        if current_distance is None:
+            return None
+        for neighbour in self._neighbours(self.position):
+            neighbour_distance = distances.get(neighbour)
+            if (
+                neighbour_distance is not None
+                and current_distance < neighbour_distance <= max_distance
+            ):
+                return neighbour
         return None
+        # start = player_pos
+        # queue = deque([start])
+        # distances: dict[tuple[int, int], int] = {start: 0}
 
-    def check_player_distance(
-            self,
-            player_pos: tuple[int, int],
-            distance_check: int,
-            current_pos: tuple[int, int],
-    ) -> bool:
-        """Check the distance to the player, if close return True."""
-        row = player_pos[0] - current_pos[0]
-        col = player_pos[1] - current_pos[1]
-        max_dist = distance_check
-        # number of tiles away to match against (any direction)
-        dist = (max_dist, -max_dist)
-        valid_path = False
-        # if within N tiles of the player in any direction return true
-        if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
-            valid_path = True
-        return valid_path
+        # # BFS from player to get distances
+        # while queue:
+        #     current_pos = queue.popleft()
+        #     qrow, qcol = current_pos
+        #     for _, direction in enumerate(Direction):
+        #         setrow = qrow + direction.value[0]
+        #         setcol = qcol + direction.value[1]
+        #         neighbor_pos = (setrow, setcol)
+        #         if (
+        #             self.game.validate_nonplayer_update(setrow, setcol)
+        #             and neighbor_pos not in distances
+        #         ):
+        #             distances[neighbor_pos] = distances[current_pos] + 1
+        #             queue.append(neighbor_pos)
+
+        # # Current distance from player
+        # current_dist = distances.get(self.position, None)
+        # if current_dist is None:
+        #     return None  # Can't reach current position from player
+
+        # # Find a neighbor that increases distance but stays within max_distance
+        # qrow, qcol = self.position
+        # for _, direction in enumerate(Direction):
+        #     setrow = qrow + direction.value[0]
+        #     setcol = qcol + direction.value[1]
+        #     neighbor_pos = (setrow, setcol)
+        #     if self.game.validate_nonplayer_update(setrow, setcol):
+        #         neighbor_dist = distances.get(neighbor_pos, None)
+        #         if (neighbor_dist is not None
+        #             and neighbor_dist > current_dist
+        #             and neighbor_dist <= max_distance
+        #         ):
+        #             return neighbor_pos  # First valid move away
+
+        # return None  # No valid move away
+
+    def bfs_pathfinder(self, target: Position) -> Position | None:
+        """Find the best path towards the players curernt position."""
+        start_pos = self.position
+        parent: dict[Position, Position] = {}
+        visited = {start_pos}
+        queue = deque([start_pos])
+        while queue:
+            current_pos = queue.popleft()
+            # qrow, qcol = current_pos
+            if current_pos == target:
+                if current_pos == start_pos:
+                    return None
+                while parent[current_pos] != start_pos:
+                    current_pos = parent[current_pos]
+                return current_pos
+            for neighbour in self._neighbours(current_pos):
+                if neighbour not in visited and (
+                    neighbour == target or self._can_walk(neighbour)
+                ):
+                    visited.add(neighbour)
+                    parent[neighbour] = current_pos
+                    queue.append(neighbour)
+        return None
+        #         path = []
+        #         curr: tuple[int, int] | None = current_pos
+        #         while curr is not None:
+        #             curr = parent[curr]
+        #             if curr is not None:
+        #                 path.append(curr)
+        #         return path
+
+        #     for direction in enumerate(Direction):
+        #         setrow = qrow + direction[1].value[0]
+        #         setcol = qcol + direction[1].value[1]
+        #         neighbor_pos = (setrow, setcol)
+        #         if (
+        #             self.game.validate_nonplayer_update(setrow, setcol)
+        #             and neighbor_pos not in parent
+        #         ):
+        #             parent[neighbor_pos] = current_pos
+        #             queue.append(neighbor_pos)
+        # return None
+
+    # def check_player_distance(
+    #         self,
+    #         player_pos: tuple[int, int],
+    #         distance_check: int,
+    #         current_pos: tuple[int, int],
+    # ) -> bool:
+    #     """Check the distance to the player, if close return True."""
+    #     row = player_pos[0] - current_pos[0]
+    #     col = player_pos[1] - current_pos[1]
+    #     max_dist = distance_check
+    #     # number of tiles away to match against (any direction)
+    #     dist = (max_dist, -max_dist)
+    #     valid_path = False
+    #     # if within N tiles of the player in any direction return true
+    #     if (row < dist[0] and row > dist[1]) and (col < dist[0] and col > dist[1]):
+    #         valid_path = True
+    #     return valid_path

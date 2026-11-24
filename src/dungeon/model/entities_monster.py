@@ -1,15 +1,17 @@
 """Entities of a Monster Sub-Class."""
 
-from dataclasses import dataclass
 import random
+from dataclasses import dataclass
 from enum import Enum
+from typing import Collection
 
 from dungeon.model.entities import (
     Direction,
     Entity,
     EntityType,
+    grid_distance,
 )
-from dungeon.model.level import GameLevel
+from dungeon.model.level import GameLevel, Position
 
 
 class EntitySubType(Enum):
@@ -89,6 +91,9 @@ class Monster(Entity):
         self.move_processed = False
         self.most_recent_move = None
 
+# -- --------------------------------------------------------------------------
+# -- General Monster information and stats
+# -- --------------------------------------------------------------------------
     def monster_level_types(self, game: GameLevel) -> EntityType:
         """Generate a monster needed for this level."""
         # Only include all monsters for the MAX level of the game
@@ -115,22 +120,6 @@ class Monster(Entity):
             taken = True
         return taken
 
-    def attack_player(self, player_pos: tuple[int, int]) -> int:
-        """Attack the player while on turn."""
-        if self.check_player_distance(player_pos, 2, self.position):
-            filtered_move = self.attack_moves()
-            if filtered_move is not None:
-                move = random.choice(filtered_move)
-                self.most_recent_move = f"{move.value[0]}"
-                percentage_chance = self.monster_type.value[3]
-                rand = random.random()
-                if rand < percentage_chance:
-                    self.most_recent_move += f", {move.value[1]} damage."
-                    return move.value[1]
-                else:
-                    self.most_recent_move += ", missed!"
-        return 0
-
     def monster_stats(self) -> str:
         """Generate a the monster stats."""
         stats: str = ""
@@ -155,13 +144,37 @@ class Monster(Entity):
 
     def determine_visibility(self, player_pos: tuple[int, int]) -> None:
         """Determine if the monster should be visible or not."""
-        if self.check_player_distance(player_pos, PLAYER_CHASE_DISTANCE, self.position):
-            self.visible = True
-        else:
-            self.visible = False
+        self.visible = grid_distance(self.position, player_pos) <= PLAYER_CHASE_DISTANCE
+
+# -- --------------------------------------------------------------------------
+# -- Movement and Attack Functions
+# -- --------------------------------------------------------------------------
+    def take_turn(
+        self, player: Entity, filled_positions: Collection[Position]
+    ) -> None:
+        """Move, then attack the player if they are in reach."""
+        self.last_attack = None
+        self.move_monster(player.position, filled_positions)
+        self.last_attack = self.attack_player(player.position)
+
+    def attack_player(self, player_pos: tuple[int, int]) -> int:
+        """Attack the player while on turn."""
+        if grid_distance(self.position, player_pos) <= PLAYER_CHASE_DISTANCE:
+            filtered_move = self.attack_moves()
+            if filtered_move is not None:
+                move = random.choice(filtered_move)
+                self.most_recent_move = f"{move.value[0]}"
+                percentage_chance = self.monster_type.value[3]
+                rand = random.random()
+                if rand < percentage_chance:
+                    self.most_recent_move += f", {move.value[1]} damage."
+                    return move.value[1]
+                else:
+                    self.most_recent_move += ", missed!"
+        return 0
 
     def move_monster(
-            self, player_pos: tuple[int, int], filled_positions: list[tuple[int, int]]
+            self, player_pos: tuple[int, int], filled_positions: Collection[Position]
     ) -> None:
         """Move monster to new valid grid coordinates."""
         self.move_processed = True
@@ -169,32 +182,47 @@ class Monster(Entity):
         self.determine_visibility(player_pos)
         if self.visible:
             path = self.bfs_pathfinder(player_pos)
-            next_pos = self.position
-            if path is not None:
-                result = path[-2:-1]
-                check_next_pos = result[0] if result else None
-                if (
-                    isinstance(check_next_pos, (tuple))
-                    and check_next_pos != self.position
-                    and check_next_pos != player_pos
-                    and check_next_pos not in filled_positions
-                ):
-                    next_pos = check_next_pos
-            self.position = (next_pos[0], next_pos[1])
+            if path is not None and path != player_pos and path not in filled_positions:
+                self.position = path
+            # next_pos = self.position
+            # if path is not None:
+            #     result = path[-2:-1]
+            #     check_next_pos = result[0] if result else None
+            #     if (
+            #         isinstance(check_next_pos, (tuple))
+            #         and check_next_pos != self.position
+            #         and check_next_pos != player_pos
+            #         and check_next_pos not in filled_positions
+            #     ):
+            #         next_pos = check_next_pos
+            # self.position = (next_pos[0], next_pos[1])
             valid_movement = True
+
         if not valid_movement or not self.visible:
-            while not valid_movement:
-                movement = round(random.uniform(1, len(Direction)))
-                for direction in enumerate(Direction):
-                    if movement-1 == direction[0]:
-                        new_row = self.position[0] - direction[1].value[0]
-                        new_col = self.position[1] - direction[1].value[1]
-                        if (
-                            self.game.validate_nonplayer_update(new_row, new_col)
-                            and (new_row, new_col) not in filled_positions
-                        ):
-                            self.position = (new_row, new_col)
-                            valid_movement = True
-                if not valid_movement:
-                    # give the whileloop a way out if there are no feasible moves
-                    break
+            self.random_movement(filled_positions, random.Random())
+            # while not valid_movement:
+            #     movement = round(random.uniform(1, len(Direction)))
+            #     for direction in enumerate(Direction):
+            #         if movement-1 == direction[0]:
+            #             new_row = self.position[0] - direction[1].value[0]
+            #             new_col = self.position[1] - direction[1].value[1]
+            #             if (
+            #                 self.game.validate_nonplayer_update(new_row, new_col)
+            #                 and (new_row, new_col) not in filled_positions
+            #             ):
+            #                 self.position = (new_row, new_col)
+            #                 valid_movement = True
+            #     if not valid_movement:
+            #         # give the whileloop a way out if there are no feasible moves
+            #         break
+
+
+    def random_movement(self, taken: Collection[Position], rng: random.Random) -> None:
+        """Step in a random open direction, or stay put if boxed in."""
+        directions = list(Direction)
+        rng.shuffle(directions)
+        for direction in directions:
+            step = direction.step(self.position)
+            if self._can_walk(step) and step not in taken:
+                self.position = step
+                return

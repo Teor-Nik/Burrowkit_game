@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-from dungeon.model.entities import Entity, EntityType
+from dungeon.model.entities import Entity, EntityType, grid_distance
 from dungeon.model.level import GameLevel
 
 
@@ -30,30 +30,35 @@ class Kit(Entity):
             self, player_pos: tuple[int, int], filled_positions: list[tuple[int, int]]
     ) -> None:
         """Move Kit to new valid grid coordinates."""
-        if not self.check_player_distance(player_pos, 3, self.position):
+        print("Kit is moving...",grid_distance(self.position, player_pos))
+        if not grid_distance(self.position, player_pos) <= 3:
             path = self.bfs_pathfinder(player_pos)
-            next_pos = self.position
-            if path is not None:
-                result = path[-2:-1]
-                check_next_pos = result[0] if result else None
-                if (
-                    isinstance(check_next_pos, (tuple))
-                    and check_next_pos != self.position
-                    and check_next_pos != player_pos
-                    and check_next_pos not in filled_positions
-                ):
-                    next_pos = check_next_pos
-            self.position = (next_pos[0], next_pos[1])
-        elif self.check_player_distance(player_pos, 3, self.position):
+            print ("Kit path:", path)
+            # next_pos = self.position
+            if path is not None and path != player_pos and path not in filled_positions:
+                self.position = path
+            #     result = path[-2:-1]
+            #     check_next_pos = result[0] if result else None
+            #     if (
+            #         isinstance(check_next_pos, (tuple))
+            #         and check_next_pos != self.position
+            #         and check_next_pos != player_pos
+            #         and check_next_pos not in filled_positions
+            #     ):
+            #         next_pos = check_next_pos
+            # self.position = (next_pos[0], next_pos[1])
+        elif grid_distance(self.position, player_pos) <= 3:
             away_path = self.bfs_move_away(player_pos)
-            next_pos = self.position
-            if away_path is not None:
-                check_next_pos = away_path
-                if (
-                    isinstance(check_next_pos, (tuple))
-                    and check_next_pos != self.position
-                    and check_next_pos != player_pos
-                    and check_next_pos not in filled_positions
-                ):
-                    next_pos = check_next_pos
-            self.position = (next_pos[0], next_pos[1])
+            # next_pos = self.position
+            if away_path is not None and away_path != player_pos and away_path not in filled_positions:
+                self.position = away_path
+            #     check_next_pos = away_path
+            #     if (
+            #         isinstance(check_next_pos, (tuple))
+            #         and check_next_pos != self.position
+            #         and check_next_pos != player_pos
+            #         and check_next_pos not in filled_positions
+            #     ):
+            #         next_pos = check_next_pos
+            # self.position = (next_pos[0], next_pos[1])
+        print("Kit moved to:", self.position, "from:", player_pos)
