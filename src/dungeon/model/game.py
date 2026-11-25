@@ -34,7 +34,6 @@ class Game:
         self._generate_monsters()
         self._generate_items()
 
-
     def check_monsters_health(self) -> None:
         """Ensure all monsters health is still valid."""
         for mon in self.monsters_list:
@@ -60,7 +59,6 @@ class Game:
         for idx, monster in enumerate(self.monsters_list):
             monster.move_processed = False
             monster.determine_visibility(player_pos)
-
 
 # -- --------------------------------------------------------------------------
 # -- Generation of entities and items, manage visibility

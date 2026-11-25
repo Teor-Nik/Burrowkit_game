@@ -154,8 +154,6 @@ class GameLevel:
         """End the current game."""
         self.game_finished = True
 
-
-
     def level_position(self, move_back_down: bool) -> tuple[int, int]:
         """Get the Row and Col of the requested level."""
         tile: Tile

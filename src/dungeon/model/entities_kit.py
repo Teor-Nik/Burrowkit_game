@@ -30,10 +30,10 @@ class Kit(Entity):
             self, player_pos: tuple[int, int], filled_positions: list[tuple[int, int]]
     ) -> None:
         """Move Kit to new valid grid coordinates."""
-        print("Kit is moving...",grid_distance(self.position, player_pos))
+        # print("Kit is moving...",grid_distance(self.position, player_pos))
         if not grid_distance(self.position, player_pos) <= 3:
             path = self.bfs_pathfinder(player_pos)
-            print ("Kit path:", path)
+            # print ("Kit path:", path)
             # next_pos = self.position
             if path is not None and path != player_pos and path not in filled_positions:
                 self.position = path
@@ -61,4 +61,4 @@ class Kit(Entity):
             #     ):
             #         next_pos = check_next_pos
             # self.position = (next_pos[0], next_pos[1])
-        print("Kit moved to:", self.position, "from:", player_pos)
+        # print("Kit moved to:", self.position, "from:", player_pos)
